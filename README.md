@@ -1,9 +1,6 @@
-# Yamcs QuickStart
+# Ground Mission Control
 
-This repository holds the source code to start a basic Yamcs application that monitors a simulated spacecraft in low earth orbit.
-
-You may find it useful as a starting point for your own project.
-
+This repository holds the source code for HuskySat-2's ground control software. It is built upon a fork of the quickstart repository for YAMCS. Once complete, the software should be configured to meet our mission requirements, interface with 3rd party ground station providers, and convert F Prime command and telemetry dictionaries into YAMCS-compatible mission databases. 
 
 ## Prerequisites
 
@@ -57,3 +54,4 @@ This project defines a few example CCSDS telecommands. They are sent to UDP port
 Running through Maven is useful during development, but it is not recommended for production environments. Instead bundle up your Yamcs application in a tar.gz file:
 
     ./mvnw package
+    
