@@ -1,0 +1,177 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<xtce:SpaceSystem xmlns:xtce="http://www.omg.org/space/xtce"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://www.omg.org/space/xtce https://www.omg.org/spec/XTCE/20180204/SpaceSystem.xsd"
+                  name="HS2">
+
+  <xtce:Header validationStatus="Draft" classification="NotClassified">
+    <xtce:History>
+      <xtce:HistoryEntry purpose="creation">
+        <xtce:Comment>HS2 CubeSat telemetry — matches simulator.py packet layout</xtce:Comment>
+      </xtce:HistoryEntry>
+    </xtce:History>
+  </xtce:Header>
+
+  <!-- ================================================================
+       TELEMETRY
+       Packet layout (big-endian, 22 bytes):
+         [0-1]  uint16  CCSDS primary header word 0 (version|type|sec_hdr|apid)
+         [2-3]  uint16  CCSDS primary header word 1 (seq flags | seq count)
+         [4-5]  uint16  CCSDS data length field
+         [6-9]  uint32  packet_id
+         [10-13] float32 temperature (°C)
+         [14-17] float32 voltage (V)
+         [18-21] uint32  status (0=IDLE, 1=ACTIVE, 2=ERROR)
+       ================================================================ -->
+
+  <xtce:TelemetryMetaData>
+
+    <xtce:ParameterTypeSet>
+
+      <!-- CCSDS header fields -->
+      <xtce:IntegerParameterType name="uint16Type" signed="false">
+        <xtce:IntegerDataEncoding sizeInBits="16" encoding="unsigned"/>
+      </xtce:IntegerParameterType>
+
+      <xtce:IntegerParameterType name="uint32Type" signed="false">
+        <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
+      </xtce:IntegerParameterType>
+
+      <!-- Temperature: 32-bit IEEE 754 float -->
+      <xtce:FloatParameterType name="temperatureType">
+        <xtce:UnitSet>
+          <xtce:Unit>degC</xtce:Unit>
+        </xtce:UnitSet>
+        <xtce:FloatDataEncoding sizeInBits="32" encoding="IEEE754_1985"/>
+      </xtce:FloatParameterType>
+
+      <!-- Voltage: 32-bit IEEE 754 float -->
+      <xtce:FloatParameterType name="voltageType">
+        <xtce:UnitSet>
+          <xtce:Unit>V</xtce:Unit>
+        </xtce:UnitSet>
+        <xtce:FloatDataEncoding sizeInBits="32" encoding="IEEE754_1985"/>
+      </xtce:FloatParameterType>
+
+      <!-- Status: enumerated uint32 -->
+      <xtce:EnumeratedParameterType name="statusType">
+        <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
+        <xtce:EnumerationList>
+          <xtce:Enumeration label="IDLE"   value="0"/>
+          <xtce:Enumeration label="ACTIVE" value="1"/>
+          <xtce:Enumeration label="ERROR"  value="2"/>
+        </xtce:EnumerationList>
+      </xtce:EnumeratedParameterType>
+
+    </xtce:ParameterTypeSet>
+
+    <xtce:ParameterSet>
+
+      <!-- CCSDS primary header -->
+      <xtce:Parameter name="ccsds_word0"   parameterTypeRef="uint16Type">
+        <xtce:LongDescription>CCSDS primary header word 0: version|type|sec_hdr_flag|apid</xtce:LongDescription>
+      </xtce:Parameter>
+      <xtce:Parameter name="ccsds_word1"   parameterTypeRef="uint16Type">
+        <xtce:LongDescription>CCSDS primary header word 1: sequence flags and count</xtce:LongDescription>
+      </xtce:Parameter>
+      <xtce:Parameter name="ccsds_length"  parameterTypeRef="uint16Type">
+        <xtce:LongDescription>CCSDS data length field (data bytes minus 1)</xtce:LongDescription>
+      </xtce:Parameter>
+
+      <!-- Science / housekeeping fields -->
+      <xtce:Parameter name="packet_id"    parameterTypeRef="uint32Type">
+        <xtce:LongDescription>Monotonic packet counter</xtce:LongDescription>
+      </xtce:Parameter>
+      <xtce:Parameter name="temperature"  parameterTypeRef="temperatureType">
+        <xtce:LongDescription>MCU die temperature in degrees Celsius</xtce:LongDescription>
+      </xtce:Parameter>
+      <xtce:Parameter name="voltage"      parameterTypeRef="voltageType">
+        <xtce:LongDescription>3.3 V bus voltage in volts</xtce:LongDescription>
+      </xtce:Parameter>
+      <xtce:Parameter name="status"       parameterTypeRef="statusType">
+        <xtce:LongDescription>System operating state</xtce:LongDescription>
+      </xtce:Parameter>
+
+    </xtce:ParameterSet>
+
+    <xtce:ContainerSet>
+
+      <!--
+        HS2HousekeepingPacket: one entry per field in the order they appear
+        in the binary packet produced by simulator.py.
+        Yamcs processes entries sequentially, each consuming the declared bits.
+      -->
+      <xtce:SequenceContainer name="HS2HousekeepingPacket">
+        <xtce:LongDescription>
+          22-byte CCSDS-framed housekeeping telemetry packet from HS2 simulator.
+        </xtce:LongDescription>
+        <xtce:EntryList>
+          <xtce:ParameterRefEntry parameterRef="ccsds_word0"/>
+          <xtce:ParameterRefEntry parameterRef="ccsds_word1"/>
+          <xtce:ParameterRefEntry parameterRef="ccsds_length"/>
+          <xtce:ParameterRefEntry parameterRef="packet_id"/>
+          <xtce:ParameterRefEntry parameterRef="temperature"/>
+          <xtce:ParameterRefEntry parameterRef="voltage"/>
+          <xtce:ParameterRefEntry parameterRef="status"/>
+        </xtce:EntryList>
+      </xtce:SequenceContainer>
+
+    </xtce:ContainerSet>
+
+  </xtce:TelemetryMetaData>
+
+  <!-- ================================================================
+       COMMANDS
+       A minimal command set so CommandMetaData/MetaCommandSet is present.
+       ================================================================ -->
+
+  <xtce:CommandMetaData>
+
+    <xtce:ArgumentTypeSet>
+      <xtce:EnumeratedArgumentType name="Arg_Fw_On_Type">
+        <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
+        <xtce:EnumerationList>
+          <xtce:Enumeration label="OFF" value="0"/>
+          <xtce:Enumeration label="ON"  value="1"/>
+        </xtce:EnumerationList>
+      </xtce:EnumeratedArgumentType>
+    </xtce:ArgumentTypeSet>
+
+    <xtce:MetaCommandSet>
+
+      <xtce:MetaCommand name="CMD_NO_OP" abstract="false">
+        <xtce:LongDescription>No-operation command</xtce:LongDescription>
+        <xtce:CommandContainer name="CMD_NO_OP_CC">
+          <xtce:EntryList/>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">0</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x0</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">async</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+
+      <xtce:MetaCommand name="CMD_SET_LED" abstract="false">
+        <xtce:LongDescription>Command to turn on or off the blinking LED</xtce:LongDescription>
+        <xtce:ArgumentList>
+          <xtce:Argument name="onOff" argumentTypeRef="Arg_Fw_On_Type">
+            <xtce:LongDescription>LED on/off state</xtce:LongDescription>
+          </xtce:Argument>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="CMD_SET_LED_CC">
+          <xtce:EntryList>
+            <xtce:ArgumentRefEntry argumentRef="onOff"/>
+          </xtce:EntryList>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">1</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x1</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">async</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+
+    </xtce:MetaCommandSet>
+
+  </xtce:CommandMetaData>
+
+</xtce:SpaceSystem>
