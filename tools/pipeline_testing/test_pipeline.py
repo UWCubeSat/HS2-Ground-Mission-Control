@@ -4,7 +4,7 @@ test_pipeline.py
 
 pytest test suite covering:
   - XTCE validator (validate_xtce.py)
-  - Telemetry simulator packet encoding (simulator.py)
+  - Telemetry simulator packet encoding (test_simulator.py)
 """
 
 from __future__ import annotations
