@@ -2,26 +2,23 @@
 """
 test_fprime_to_xtce.py
 
-pytest test suite for fprime_to_xtce.py
+pytest test suite for fprime_to_xtce.py — covers JSON loading, parsing,
+type conversion, XTCE structure generation, and file writing.
+XTCE structural validation is owned by test_pipeline.py.
 """
 from __future__ import annotations
 
 import json
-import tempfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
 import pytest
 
 from fprime_to_xtce import (
-    EnumValue,
-    FPrimeDictionary,
-    FPrimeType,
     _xtce,
     build_xtce,
     load_json,
     parse_dictionary,
-    validate_xtce,
     write_xml,
 )
 
@@ -164,8 +161,8 @@ def test_nested_telemetry_name_preserved(full_dict: dict) -> None:
     assert "sys.Status" in names
 
 
-def test_telemetry_type_integer_unsigned(full_dict: dict) -> None:
-    extra = {
+def test_telemetry_type_integer_unsigned() -> None:
+    data = {
         "metadata": {"deploymentName": "X"},
         "commands": [],
         "telemetryChannels": [
@@ -178,7 +175,7 @@ def test_telemetry_type_integer_unsigned(full_dict: dict) -> None:
         ],
         "events": [],
     }
-    d = parse_dictionary(extra)
+    d = parse_dictionary(data)
     assert d.telemetry[0].fprime_type.size == 16
     assert d.telemetry[0].fprime_type.signed is False
 
@@ -200,23 +197,18 @@ def test_enum_values_parsed(full_dict: dict) -> None:
 def test_enum_values_in_xtce(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
-    enum_types = [
-        el for el in root.iter(_xtce("EnumeratedParameterType"))
-    ]
+    enum_types = list(root.iter(_xtce("EnumeratedParameterType")))
     assert len(enum_types) >= 1
     enum_list = enum_types[0].find(_xtce("EnumerationList"))
     assert enum_list is not None
     labels = [e.get("label") for e in enum_list.findall(_xtce("Enumeration"))]
-    assert "IDLE" in labels or "OFF" in labels or len(labels) > 0
+    assert len(labels) > 0
 
 
 def test_command_enum_arg_type(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
-    enum_arg_types = [
-        el for el in root.iter(_xtce("EnumeratedArgumentType"))
-    ]
-    # full_dict commands don't include enums, so none expected
+    enum_arg_types = list(root.iter(_xtce("EnumeratedArgumentType")))
     assert isinstance(enum_arg_types, list)
 
 
@@ -269,20 +261,15 @@ def test_empty_file_raises(tmp_path: Path) -> None:
         load_json(p)
 
 
-# ---------------------------------------------------------------------------
-# 6. XTCE XML output validity
-# ---------------------------------------------------------------------------
+def test_missing_metadata_defaults() -> None:
+    data = {"commands": [], "telemetryChannels": [], "events": []}
+    d = parse_dictionary(data)
+    assert d.deployment_name == "FPrimeMission"
 
-def test_write_and_validate_xml(tmp_path: Path, full_dict: dict) -> None:
-    d = parse_dictionary(full_dict)
-    root = build_xtce(d)
-    out = tmp_path / "mission.xml"
-    write_xml(root, out)
-    assert out.exists()
-    assert out.stat().st_size > 0
-    ok = validate_xtce(out)
-    assert ok is True
 
+# ---------------------------------------------------------------------------
+# 6. XTCE structure (converter output, not validation logic)
+# ---------------------------------------------------------------------------
 
 def test_xml_has_space_system_root(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
@@ -293,36 +280,34 @@ def test_xml_has_space_system_root(full_dict: dict) -> None:
 def test_xml_has_telemetry_meta(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
-    tlm = root.find(_xtce("TelemetryMetaData"))
-    assert tlm is not None
+    assert root.find(_xtce("TelemetryMetaData")) is not None
 
 
 def test_xml_has_command_meta(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
-    cmd_meta = root.find(_xtce("CommandMetaData"))
-    assert cmd_meta is not None
+    assert root.find(_xtce("CommandMetaData")) is not None
 
 
 def test_xml_parameters_present(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
-    params = list(root.iter(_xtce("Parameter")))
-    assert len(params) >= 2  # sys.Temperature, sys.Status, plus event params
+    assert len(list(root.iter(_xtce("Parameter")))) >= 2
 
 
 def test_xml_metacommands_present(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
-    cmds = list(root.iter(_xtce("MetaCommand")))
-    assert len(cmds) == 3
+    assert len(list(root.iter(_xtce("MetaCommand")))) == 3
 
 
 def test_xml_opcode_ancillary_data(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
-    ancillary_data = list(root.iter(_xtce("AncillaryData")))
-    opcodes = [ad for ad in ancillary_data if ad.get("name") == "opcode"]
+    opcodes = [
+        ad for ad in root.iter(_xtce("AncillaryData"))
+        if ad.get("name") == "opcode"
+    ]
     assert len(opcodes) == 3
     values = {int(ad.text) for ad in opcodes}
     assert 1 in values
@@ -333,17 +318,17 @@ def test_no_duplicate_parameters(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
     names = [el.get("name") for el in root.iter(_xtce("Parameter"))]
-    assert len(names) == len(set(names)), f"Duplicate parameter names: {names}"
+    assert len(names) == len(set(names))
 
 
 def test_no_duplicate_metacommands(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
     names = [el.get("name") for el in root.iter(_xtce("MetaCommand"))]
-    assert len(names) == len(set(names)), f"Duplicate MetaCommand names: {names}"
+    assert len(names) == len(set(names))
 
 
-def test_containers_present(full_dict: dict) -> None:
+def test_containers_match_telemetry_count(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
     containers = list(root.iter(_xtce("SequenceContainer")))
@@ -366,7 +351,6 @@ def test_argument_list_for_parameterized_command(full_dict: dict) -> None:
 def test_bool_argument_type(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
-    # sys.CMD_SEND_FILE has a bool param
     meta_cmds = {el.get("name"): el for el in root.iter(_xtce("MetaCommand"))}
     send_file = meta_cmds.get("sys_CMD_SEND_FILE")
     assert send_file is not None
@@ -376,20 +360,10 @@ def test_bool_argument_type(full_dict: dict) -> None:
     assert args["flag"].get("argumentTypeRef") == "Arg_BooleanType"
 
 
-def test_write_xml_creates_parent_dirs(tmp_path: Path, minimal_dict: dict) -> None:
-    d = parse_dictionary(minimal_dict)
-    root = build_xtce(d)
-    nested = tmp_path / "a" / "b" / "c" / "out.xml"
-    write_xml(root, nested)
-    assert nested.exists()
-
-
 def test_float_parameter_type(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
-    float_types = [
-        el for el in root.iter(_xtce("FloatParameterType"))
-    ]
+    float_types = list(root.iter(_xtce("FloatParameterType")))
     assert len(float_types) >= 1
     sizes = {el.find(_xtce("FloatDataEncoding")).get("sizeInBits") for el in float_types}
     assert "32" in sizes
@@ -411,8 +385,7 @@ def test_string_parameter_type_present() -> None:
     }
     d = parse_dictionary(data)
     root = build_xtce(d)
-    string_types = list(root.iter(_xtce("StringParameterType")))
-    assert len(string_types) >= 1
+    assert len(list(root.iter(_xtce("StringParameterType")))) >= 1
 
 
 def test_unknown_type_defaults_to_string() -> None:
@@ -433,13 +406,15 @@ def test_unknown_type_defaults_to_string() -> None:
     assert d.telemetry[0].fprime_type.kind == "string"
 
 
-def test_missing_metadata_defaults() -> None:
-    data = {"commands": [], "telemetryChannels": [], "events": []}
-    d = parse_dictionary(data)
-    assert d.deployment_name == "FPrimeMission"
+def test_write_xml_creates_parent_dirs(tmp_path: Path, minimal_dict: dict) -> None:
+    d = parse_dictionary(minimal_dict)
+    root = build_xtce(d)
+    nested = tmp_path / "a" / "b" / "c" / "out.xml"
+    write_xml(root, nested)
+    assert nested.exists()
 
 
-def test_xml_well_formed(tmp_path: Path, full_dict: dict) -> None:
+def test_write_xml_is_parseable(tmp_path: Path, full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
     out = tmp_path / "out.xml"
