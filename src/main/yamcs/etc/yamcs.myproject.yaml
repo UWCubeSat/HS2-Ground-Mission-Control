@@ -26,7 +26,7 @@ dataLinks:
     class: org.yamcs.tctm.UdpTmDataLink
     stream: tm_realtime
     port: 10015
-    packetPreprocessorClassName: org.yamcs.tctm.GenericPacketPreprocessor
+    packetPreprocessorClassName: com.example.myproject.MyPacketPreprocessor
     packetPreprocessorArgs:
       timestampOffset: -1
       seqCountOffset: 2
