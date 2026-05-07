@@ -31,7 +31,7 @@ from validate_xtce import (
     check_well_formed,
     validate,
 )
-from simulator import (
+from test_simulator import (
     PACKET_FORMAT,
     PACKET_SIZE,
     STATUS_ACTIVE,

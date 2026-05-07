@@ -26,7 +26,11 @@ dataLinks:
     class: org.yamcs.tctm.UdpTmDataLink
     stream: tm_realtime
     port: 10015
-    packetPreprocessorClassName: com.example.myproject.MyPacketPreprocessor
+    packetPreprocessorClassName: org.yamcs.tctm.GenericPacketPreprocessor
+    packetPreprocessorArgs:
+      timestampOffset: -1
+      seqCountOffset: 2
+      byteOrder: BIG_ENDIAN
 
   - name: udp-out
     class: org.yamcs.tctm.UdpTcDataLink
@@ -39,14 +43,16 @@ mdb:
   # Configuration of the active loaders
   # Valid loaders are: sheet, xtce or fully qualified name of the class
   - type: xtce
-    args:
-      file: mdb/xtce.xml
+    spec: mdb/xtce.xml
+  - type: xtce
+    spec: mdb/hs2_mission.xml
 
 # Configuration for streams created at server startup
 streamConfig:
   tm:
     - name: "tm_realtime"
       processor: "realtime"
+      rootContainer: "/HS2/HS2HousekeepingPacket"
     - name: "tm_dump"
   cmdHist: ["cmdhist_realtime", "cmdhist_dump"]
   event: ["events_realtime", "events_dump"]
