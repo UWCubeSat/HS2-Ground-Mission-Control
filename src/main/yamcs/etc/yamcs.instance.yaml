@@ -1,0 +1,15 @@
+mdb:
+  - type: xtce
+    spec: mdb/hs2_mission.xml
+
+dataLinks:
+  - name: udp-in
+    class: org.yamcs.tctm.UdpTmDataLink
+    stream: tm_realtime
+    host: 0.0.0.0
+    port: 10015
+
+streamConfig:
+  tm:
+    - name: tm_realtime
+      rootContainer: /HS2/HS2HousekeepingPacket
