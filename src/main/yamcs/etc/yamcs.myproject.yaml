@@ -40,7 +40,7 @@ mdb:
   # Valid loaders are: sheet, xtce or fully qualified name of the class
   - type: xtce
     args:
-      file: mdb/xtce.xml
+      file: mdb/hs2_mission.xml
 
 # Configuration for streams created at server startup
 streamConfig:
