@@ -9,7 +9,7 @@ End-to-end validation and simulation tools for the F Prime → XTCE → Yamcs pi
 | File | Purpose |
 |------|---------|
 | `validate_xtce.py` | Validates an XTCE XML file (well-formedness, sections, refs, duplicates) |
-| `simulator.py` | Sends binary CCSDS-framed telemetry packets to Yamcs over UDP |
+| `test_simulator.py` | Sends binary CCSDS-framed telemetry packets to Yamcs over UDP |
 | `hs2_mission.xml` | Minimal but realistic XTCE file matching the simulator packet layout |
 | `test_pipeline.py` | pytest suite (39 tests covering validator + simulator) |
 | `requirements_pipeline.txt` | Python dependencies |
@@ -65,10 +65,10 @@ Exit codes: `0` = all passed, `1` = checks failed, `2` = file not found.
 
 ```bash
 # Send 1 packet/sec forever to Yamcs on localhost:10015
-python simulator.py --host 127.0.0.1 --port 10015 --rate 1
+python test_simulator.py --host 127.0.0.1 --port 10015 --rate 1
 
 # Send 50 packets at 2/sec with debug logging
-python simulator.py --host 127.0.0.1 --port 10015 --rate 2 --count 50 --verbose
+python test_simulator.py --host 127.0.0.1 --port 10015 --rate 2 --count 50 --verbose
 
 # Stop with Ctrl+C
 ```
@@ -147,11 +147,12 @@ streamConfig:
 ### 4. Start Yamcs, then start the simulator
 
 ```bash
-# Terminal 1 — Yamcs
-yamcsadmin run
+# Terminal 1 — compile and start Yamcs
+./mvnw compile
+./mvnw yamcs:run
 
 # Terminal 2 — simulator
-python simulator.py --host 127.0.0.1 --port 10015 --rate 1 --verbose
+python test_simulator.py --host 127.0.0.1 --port 10015 --rate 1 --verbose
 ```
 
 ### 5. Verify in Yamcs Web UI (http://localhost:8090)
@@ -164,20 +165,3 @@ python simulator.py --host 127.0.0.1 --port 10015 --rate 1 --verbose
 | Telemetry → Realtime | All 4 parameters updating at 1 Hz |
 | Telemetry → status | Cycling IDLE → ACTIVE → ERROR as expected |
 | Archive | Packets accumulating in the archive browser |
-
----
-
-## Where to put these files in the repo
-
-```
-HS2-Ground-Mission-Control/
-└── tools/
-    ├── fprime_to_xtce/          ← converter (previous deliverable)
-    └── pipeline_testing/        ← this deliverable
-        ├── validate_xtce.py
-        ├── simulator.py
-        ├── hs2_mission.xml
-        ├── test_pipeline.py
-        ├── requirements_pipeline.txt
-        └── README.md
-```
