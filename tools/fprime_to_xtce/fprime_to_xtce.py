@@ -349,7 +349,7 @@ def _add_telemetry_parameter_types(
         el = ET.SubElement(type_set, _xtce("IntegerParameterType"), attrib={"name": tname})
         enc = ET.SubElement(el, _xtce("IntegerDataEncoding"))
         enc.set("sizeInBits", str(size))
-        enc.set("encoding", "signed" if signed else "unsigned")
+        enc.set("encoding", "twosComplement" if signed else "unsigned")
 
     def _add_float(size: int) -> None:
         tname = f"Float_{size}Type"
@@ -379,6 +379,11 @@ def _add_telemetry_parameter_types(
         el = ET.SubElement(type_set, _xtce("StringParameterType"), attrib={"name": tname})
         enc = ET.SubElement(el, _xtce("StringDataEncoding"))
         enc.set("encoding", "UTF-8")
+        size_in_bits = ET.SubElement(enc, _xtce("SizeInBits"))
+        fixed = ET.SubElement(size_in_bits, _xtce("Fixed"))
+        fixed_val = ET.SubElement(fixed, _xtce("FixedValue"))
+        fixed_val.text = "2048"
+        ET.SubElement(size_in_bits, _xtce("TerminationChar")).text = "00"
 
     def _add_enum(fprime_type: FPrimeType) -> None:
         tname = _xtce_type_name(fprime_type)
@@ -437,7 +442,7 @@ def _add_argument_types(
         el = ET.SubElement(type_set, _xtce("IntegerArgumentType"), attrib={"name": tname})
         enc = ET.SubElement(el, _xtce("IntegerDataEncoding"))
         enc.set("sizeInBits", str(size))
-        enc.set("encoding", "signed" if signed else "unsigned")
+        enc.set("encoding", "twosComplement" if signed else "unsigned")
 
     def _add_float_arg(size: int) -> None:
         tname = f"Arg_Float_{size}Type"
@@ -467,6 +472,11 @@ def _add_argument_types(
         el = ET.SubElement(type_set, _xtce("StringArgumentType"), attrib={"name": tname})
         enc = ET.SubElement(el, _xtce("StringDataEncoding"))
         enc.set("encoding", "UTF-8")
+        size_in_bits = ET.SubElement(enc, _xtce("SizeInBits"))
+        fixed = ET.SubElement(size_in_bits, _xtce("Fixed"))
+        fixed_val = ET.SubElement(fixed, _xtce("FixedValue"))
+        fixed_val.text = "2048"
+        ET.SubElement(size_in_bits, _xtce("TerminationChar")).text = "00"
 
     def _add_enum_arg(fprime_type: FPrimeType) -> None:
         safe = fprime_type.name.replace(".", "_").replace(" ", "_")

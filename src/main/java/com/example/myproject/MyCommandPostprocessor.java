@@ -51,20 +51,29 @@ public class MyCommandPostprocessor implements CommandPostprocessor {
     // This method must return the (possibly modified) packet binary.
     @Override
     public byte[] process(PreparedCommand pc) {
-        byte[] binary = pc.getBinary();
+        byte[] originalBinary = pc.getBinary();
+        byte[] binary;
 
-        // Set CCSDS packet length
+        // CCSDS Primary Header requires at least 6 bytes. 
+        // If YAMCS gave us less, allocate a new array that can fit the 6-byte header + payload
+        if (originalBinary.length < 6) {
+            binary = new byte[6 + originalBinary.length];
+            // Shift the original payload bytes down past the new 6-byte header zone
+            System.arraycopy(originalBinary, 0, binary, 6, originalBinary.length);
+        } else {
+            binary = originalBinary;
+        }
+
+        // Now index 4 is GUARANTEED to exist safely.
+        // Set CCSDS packet length field (Bytes 4-5)
+        // Formula: Total packet length - 7
         ByteArrayUtils.encodeUnsignedShort(binary.length - 7, binary, 4);
 
-        // Set CCSDS sequence count
+        // Set CCSDS sequence count fields safely
         int seqCount = seqFiller.fill(binary);
 
-        // Publish the sequence count to Command History. This has no special
-        // meaning to Yamcs, but it shows how to store custom information specific
-        // to a command.
+        // Publish updates to YAMCS Command History tracking engine
         commandHistory.publish(pc.getCommandId(), "ccsds-seqcount", seqCount);
-
-        // Since we modified the binary, update the binary in Command History too.
         commandHistory.publish(pc.getCommandId(), PreparedCommand.CNAME_BINARY, binary);
 
         return binary;

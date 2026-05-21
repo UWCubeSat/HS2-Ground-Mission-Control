@@ -43,7 +43,7 @@ mdb:
   # Configuration of the active loaders
   # Valid loaders are: sheet, xtce or fully qualified name of the class
   - type: xtce
-    spec: mdb/xtce.xml
+    spec: mdb/mission.xml
   - type: xtce
     spec: mdb/hs2_mission.xml
 

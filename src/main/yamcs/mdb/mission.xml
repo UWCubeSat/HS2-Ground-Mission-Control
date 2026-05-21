@@ -23,7 +23,12 @@
         <xtce:FloatDataEncoding sizeInBits="32" encoding="IEEE754_1985"/>
       </xtce:FloatParameterType>
       <xtce:StringParameterType name="StringType">
-        <xtce:StringDataEncoding encoding="UTF-8"/>
+        <xtce:StringDataEncoding encoding="UTF-8">
+          <xtce:SizeInBits>
+            <xtce:Fixed><xtce:FixedValue>2048</xtce:FixedValue></xtce:Fixed>
+            <xtce:TerminationChar>00</xtce:TerminationChar>
+          </xtce:SizeInBits>
+        </xtce:StringDataEncoding>
       </xtce:StringParameterType>
       <xtce:IntegerParameterType name="Unsigned_32Type">
         <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
@@ -103,10 +108,15 @@
   <xtce:CommandMetaData>
     <xtce:ArgumentTypeSet>
       <xtce:StringArgumentType name="Arg_StringType">
-        <xtce:StringDataEncoding encoding="UTF-8"/>
+        <xtce:StringDataEncoding encoding="UTF-8">
+          <xtce:SizeInBits>
+            <xtce:Fixed><xtce:FixedValue>2048</xtce:FixedValue></xtce:Fixed>
+            <xtce:TerminationChar>00</xtce:TerminationChar>
+          </xtce:SizeInBits>
+        </xtce:StringDataEncoding>
       </xtce:StringArgumentType>
       <xtce:IntegerArgumentType name="Arg_Integer_32Type">
-        <xtce:IntegerDataEncoding sizeInBits="32" encoding="signed"/>
+        <xtce:IntegerDataEncoding sizeInBits="32" encoding="twosComplement"/>
       </xtce:IntegerArgumentType>
       <xtce:FloatArgumentType name="Arg_Float_32Type">
         <xtce:FloatDataEncoding sizeInBits="32" encoding="IEEE754_1985"/>
