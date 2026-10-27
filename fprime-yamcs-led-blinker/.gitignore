@@ -1,0 +1,30 @@
+# fprime items
+logs/
+cmake-build-*
+build-artifacts/
+build-fprime-*
+*-template
+*.template.cpp
+*.template.hpp
+build-fprime-automatic-native/
+cache/
+
+# Misc
+/venv/
+/fprime-venv/
+/.idea/
+/.vscode/
+.DS_Store
+*.gcov
+
+# Local Yamcs runtime data and generated web assets
+/cache/
+/yamcs-data/
+
+# Local Python environment
+/fprime-venv/
+
+# Local practice notes
+/PRACTICE-LOG.md
+
+__pycache__/

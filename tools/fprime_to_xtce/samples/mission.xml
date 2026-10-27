@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xtce:SpaceSystem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xtce="http://www.omg.org/space/xtce" name="LedBlinker" xsi:schemaLocation="http://www.omg.org/space/xtce https://www.omg.org/spec/XTCE/20180204/SpaceSystem.xsd">
+  <xtce:Header validationStatus="Draft" classification="NotClassified">
+    <xtce:History>
+      <xtce:HistoryEntry purpose="creation">
+        <xtce:Comment>Generated from F Prime dictionary for deployment: LedBlinker</xtce:Comment>
+      </xtce:HistoryEntry>
+    </xtce:History>
+  </xtce:Header>
+  <xtce:TelemetryMetaData>
+    <xtce:ParameterTypeSet>
+      <xtce:EnumeratedParameterType name="Enum_Fw_OnType">
+        <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
+        <xtce:EnumerationList>
+          <xtce:Enumeration label="OFF" value="0"/>
+          <xtce:Enumeration label="ON" value="1"/>
+        </xtce:EnumerationList>
+      </xtce:EnumeratedParameterType>
+      <xtce:IntegerParameterType name="Unsigned_64Type">
+        <xtce:IntegerDataEncoding sizeInBits="64" encoding="unsigned"/>
+      </xtce:IntegerParameterType>
+      <xtce:FloatParameterType name="Float_32Type">
+        <xtce:FloatDataEncoding sizeInBits="32" encoding="IEEE754_1985"/>
+      </xtce:FloatParameterType>
+      <xtce:StringParameterType name="StringType">
+        <xtce:StringDataEncoding encoding="UTF-8"/>
+      </xtce:StringParameterType>
+      <xtce:IntegerParameterType name="Unsigned_32Type">
+        <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
+      </xtce:IntegerParameterType>
+    </xtce:ParameterTypeSet>
+    <xtce:ParameterSet>
+      <xtce:Parameter name="LedBlinker_led_BlinkingState" parameterTypeRef="Enum_Fw_OnType">
+        <xtce:LongDescription>The blinking state of the LED</xtce:LongDescription>
+      </xtce:Parameter>
+      <xtce:Parameter name="LedBlinker_led_LedTransitions" parameterTypeRef="Unsigned_64Type">
+        <xtce:LongDescription>The number of LED transitions</xtce:LongDescription>
+      </xtce:Parameter>
+      <xtce:Parameter name="LedBlinker_systemResources_MEMORY_TOTAL" parameterTypeRef="Unsigned_64Type">
+        <xtce:LongDescription>Total memory in KB</xtce:LongDescription>
+      </xtce:Parameter>
+      <xtce:Parameter name="LedBlinker_systemResources_MEMORY_USED" parameterTypeRef="Unsigned_64Type">
+        <xtce:LongDescription>Used memory in KB</xtce:LongDescription>
+      </xtce:Parameter>
+      <xtce:Parameter name="LedBlinker_systemResources_CPU_00" parameterTypeRef="Float_32Type">
+        <xtce:LongDescription>CPU core 0 utilization</xtce:LongDescription>
+      </xtce:Parameter>
+      <xtce:Parameter name="LedBlinker_systemResources_FRAMEWORK_VERSION" parameterTypeRef="StringType">
+        <xtce:LongDescription>F Prime framework version string</xtce:LongDescription>
+      </xtce:Parameter>
+      <xtce:Parameter name="CdhCore_health_PingLatestsReturn" parameterTypeRef="Unsigned_32Type">
+        <xtce:LongDescription>Latest ping return value</xtce:LongDescription>
+      </xtce:Parameter>
+      <xtce:Parameter name="LedBlinker_led_SetBlinkingState_state" parameterTypeRef="Enum_Fw_OnType"/>
+      <xtce:Parameter name="LedBlinker_led_BlinkIntervalSet_interval" parameterTypeRef="Unsigned_32Type"/>
+      <xtce:Parameter name="CdhCore_health_HLTH_PING_WARN_entry" parameterTypeRef="StringType"/>
+    </xtce:ParameterSet>
+    <xtce:ContainerSet>
+      <xtce:SequenceContainer name="LedBlinker_led_BlinkingState_Container">
+        <xtce:LongDescription>The blinking state of the LED</xtce:LongDescription>
+        <xtce:EntryList>
+          <xtce:ParameterRefEntry parameterRef="LedBlinker_led_BlinkingState"/>
+        </xtce:EntryList>
+      </xtce:SequenceContainer>
+      <xtce:SequenceContainer name="LedBlinker_led_LedTransitions_Container">
+        <xtce:LongDescription>The number of LED transitions</xtce:LongDescription>
+        <xtce:EntryList>
+          <xtce:ParameterRefEntry parameterRef="LedBlinker_led_LedTransitions"/>
+        </xtce:EntryList>
+      </xtce:SequenceContainer>
+      <xtce:SequenceContainer name="LedBlinker_systemResources_MEMORY_TOTAL_Container">
+        <xtce:LongDescription>Total memory in KB</xtce:LongDescription>
+        <xtce:EntryList>
+          <xtce:ParameterRefEntry parameterRef="LedBlinker_systemResources_MEMORY_TOTAL"/>
+        </xtce:EntryList>
+      </xtce:SequenceContainer>
+      <xtce:SequenceContainer name="LedBlinker_systemResources_MEMORY_USED_Container">
+        <xtce:LongDescription>Used memory in KB</xtce:LongDescription>
+        <xtce:EntryList>
+          <xtce:ParameterRefEntry parameterRef="LedBlinker_systemResources_MEMORY_USED"/>
+        </xtce:EntryList>
+      </xtce:SequenceContainer>
+      <xtce:SequenceContainer name="LedBlinker_systemResources_CPU_00_Container">
+        <xtce:LongDescription>CPU core 0 utilization</xtce:LongDescription>
+        <xtce:EntryList>
+          <xtce:ParameterRefEntry parameterRef="LedBlinker_systemResources_CPU_00"/>
+        </xtce:EntryList>
+      </xtce:SequenceContainer>
+      <xtce:SequenceContainer name="LedBlinker_systemResources_FRAMEWORK_VERSION_Container">
+        <xtce:LongDescription>F Prime framework version string</xtce:LongDescription>
+        <xtce:EntryList>
+          <xtce:ParameterRefEntry parameterRef="LedBlinker_systemResources_FRAMEWORK_VERSION"/>
+        </xtce:EntryList>
+      </xtce:SequenceContainer>
+      <xtce:SequenceContainer name="CdhCore_health_PingLatestsReturn_Container">
+        <xtce:LongDescription>Latest ping return value</xtce:LongDescription>
+        <xtce:EntryList>
+          <xtce:ParameterRefEntry parameterRef="CdhCore_health_PingLatestsReturn"/>
+        </xtce:EntryList>
+      </xtce:SequenceContainer>
+    </xtce:ContainerSet>
+  </xtce:TelemetryMetaData>
+  <xtce:CommandMetaData>
+    <xtce:ArgumentTypeSet>
+      <xtce:StringArgumentType name="Arg_StringType">
+        <xtce:StringDataEncoding encoding="UTF-8"/>
+      </xtce:StringArgumentType>
+      <xtce:IntegerArgumentType name="Arg_Integer_32Type">
+        <xtce:IntegerDataEncoding sizeInBits="32" encoding="signed"/>
+      </xtce:IntegerArgumentType>
+      <xtce:FloatArgumentType name="Arg_Float_32Type">
+        <xtce:FloatDataEncoding sizeInBits="32" encoding="IEEE754_1985"/>
+      </xtce:FloatArgumentType>
+      <xtce:IntegerArgumentType name="Arg_Unsigned_8Type">
+        <xtce:IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
+      </xtce:IntegerArgumentType>
+      <xtce:EnumeratedArgumentType name="Arg_Enum_Svc_EventManager_FilterSeverityType">
+        <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
+        <xtce:EnumerationList>
+          <xtce:Enumeration label="WARNING_HI" value="0"/>
+          <xtce:Enumeration label="WARNING_LO" value="1"/>
+          <xtce:Enumeration label="COMMAND" value="2"/>
+          <xtce:Enumeration label="ACTIVITY_HI" value="3"/>
+          <xtce:Enumeration label="ACTIVITY_LO" value="4"/>
+          <xtce:Enumeration label="DIAGNOSTIC" value="5"/>
+        </xtce:EnumerationList>
+      </xtce:EnumeratedArgumentType>
+      <xtce:EnumeratedArgumentType name="Arg_Enum_Svc_EventManager_EnabledType">
+        <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
+        <xtce:EnumerationList>
+          <xtce:Enumeration label="DISABLED" value="0"/>
+          <xtce:Enumeration label="ENABLED" value="1"/>
+        </xtce:EnumerationList>
+      </xtce:EnumeratedArgumentType>
+      <xtce:IntegerArgumentType name="Arg_Unsigned_32Type">
+        <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
+      </xtce:IntegerArgumentType>
+      <xtce:EnumeratedArgumentType name="Arg_Enum_Fw_EnabledType">
+        <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
+        <xtce:EnumerationList>
+          <xtce:Enumeration label="DISABLED" value="0"/>
+          <xtce:Enumeration label="ENABLED" value="1"/>
+        </xtce:EnumerationList>
+      </xtce:EnumeratedArgumentType>
+      <xtce:EnumeratedArgumentType name="Arg_Enum_Fw_OnType">
+        <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
+        <xtce:EnumerationList>
+          <xtce:Enumeration label="OFF" value="0"/>
+          <xtce:Enumeration label="ON" value="1"/>
+        </xtce:EnumerationList>
+      </xtce:EnumeratedArgumentType>
+      <xtce:IntegerArgumentType name="Arg_BooleanType">
+        <xtce:IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
+      </xtce:IntegerArgumentType>
+    </xtce:ArgumentTypeSet>
+    <xtce:MetaCommandSet>
+      <xtce:MetaCommand name="CdhCore_cmdDisp_CMD_NO_OP" abstract="false">
+        <xtce:LongDescription>No-op command</xtce:LongDescription>
+        <xtce:CommandContainer name="CdhCore_cmdDisp_CMD_NO_OP_CC">
+          <xtce:EntryList/>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">16777216</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x1000000</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">async</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+      <xtce:MetaCommand name="CdhCore_cmdDisp_CMD_NO_OP_STRING" abstract="false">
+        <xtce:LongDescription>No-op string command</xtce:LongDescription>
+        <xtce:ArgumentList>
+          <xtce:Argument name="arg1" argumentTypeRef="Arg_StringType">
+            <xtce:LongDescription>String argument</xtce:LongDescription>
+          </xtce:Argument>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="CdhCore_cmdDisp_CMD_NO_OP_STRING_CC">
+          <xtce:EntryList>
+            <xtce:ArgumentRefEntry argumentRef="arg1"/>
+          </xtce:EntryList>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">16777217</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x1000001</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">async</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+      <xtce:MetaCommand name="CdhCore_cmdDisp_CMD_TEST_CMD_1" abstract="false">
+        <xtce:LongDescription>No-op command</xtce:LongDescription>
+        <xtce:ArgumentList>
+          <xtce:Argument name="arg1" argumentTypeRef="Arg_Integer_32Type"/>
+          <xtce:Argument name="arg2" argumentTypeRef="Arg_Float_32Type"/>
+          <xtce:Argument name="arg3" argumentTypeRef="Arg_Unsigned_8Type"/>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="CdhCore_cmdDisp_CMD_TEST_CMD_1_CC">
+          <xtce:EntryList>
+            <xtce:ArgumentRefEntry argumentRef="arg1"/>
+            <xtce:ArgumentRefEntry argumentRef="arg2"/>
+            <xtce:ArgumentRefEntry argumentRef="arg3"/>
+          </xtce:EntryList>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">16777218</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x1000002</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">async</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+      <xtce:MetaCommand name="CdhCore_cmdDisp_CMD_CLEAR_TRACKING" abstract="false">
+        <xtce:LongDescription>Clear command tracking info to recover from components not returning status</xtce:LongDescription>
+        <xtce:CommandContainer name="CdhCore_cmdDisp_CMD_CLEAR_TRACKING_CC">
+          <xtce:EntryList/>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">16777219</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x1000003</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">async</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+      <xtce:MetaCommand name="CdhCore_events_SET_EVENT_FILTER" abstract="false">
+        <xtce:LongDescription>Set filter for reporting events. Events are not stored in component.</xtce:LongDescription>
+        <xtce:ArgumentList>
+          <xtce:Argument name="filterLevel" argumentTypeRef="Arg_Enum_Svc_EventManager_FilterSeverityType"/>
+          <xtce:Argument name="filterEnabled" argumentTypeRef="Arg_Enum_Svc_EventManager_EnabledType"/>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="CdhCore_events_SET_EVENT_FILTER_CC">
+          <xtce:EntryList>
+            <xtce:ArgumentRefEntry argumentRef="filterLevel"/>
+            <xtce:ArgumentRefEntry argumentRef="filterEnabled"/>
+          </xtce:EntryList>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">16781312</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x1001000</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">sync</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+      <xtce:MetaCommand name="CdhCore_events_SET_ID_FILTER" abstract="false">
+        <xtce:LongDescription>Filter a particular ID</xtce:LongDescription>
+        <xtce:ArgumentList>
+          <xtce:Argument name="ID" argumentTypeRef="Arg_Unsigned_32Type"/>
+          <xtce:Argument name="idFilterEnabled" argumentTypeRef="Arg_Enum_Svc_EventManager_EnabledType"/>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="CdhCore_events_SET_ID_FILTER_CC">
+          <xtce:EntryList>
+            <xtce:ArgumentRefEntry argumentRef="ID"/>
+            <xtce:ArgumentRefEntry argumentRef="idFilterEnabled"/>
+          </xtce:EntryList>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">16781314</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x1001002</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">async</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+      <xtce:MetaCommand name="CdhCore_health_HLTH_ENABLE" abstract="false">
+        <xtce:LongDescription>A command to enable or disable health checks</xtce:LongDescription>
+        <xtce:ArgumentList>
+          <xtce:Argument name="enable" argumentTypeRef="Arg_Enum_Fw_EnabledType"/>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="CdhCore_health_HLTH_ENABLE_CC">
+          <xtce:EntryList>
+            <xtce:ArgumentRefEntry argumentRef="enable"/>
+          </xtce:EntryList>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">16785408</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x1002000</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">async</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+      <xtce:MetaCommand name="CdhCore_health_HLTH_PING_ENABLE" abstract="false">
+        <xtce:LongDescription>Ignore a particular ping entry</xtce:LongDescription>
+        <xtce:ArgumentList>
+          <xtce:Argument name="entry" argumentTypeRef="Arg_StringType"/>
+          <xtce:Argument name="enable" argumentTypeRef="Arg_Enum_Fw_EnabledType"/>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="CdhCore_health_HLTH_PING_ENABLE_CC">
+          <xtce:EntryList>
+            <xtce:ArgumentRefEntry argumentRef="entry"/>
+            <xtce:ArgumentRefEntry argumentRef="enable"/>
+          </xtce:EntryList>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">16785409</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x1002001</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">async</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+      <xtce:MetaCommand name="CdhCore_health_HLTH_CHNG_PING" abstract="false">
+        <xtce:LongDescription>Change ping value</xtce:LongDescription>
+        <xtce:ArgumentList>
+          <xtce:Argument name="entry" argumentTypeRef="Arg_StringType"/>
+          <xtce:Argument name="warningValue" argumentTypeRef="Arg_Unsigned_32Type"/>
+          <xtce:Argument name="fatalValue" argumentTypeRef="Arg_Unsigned_32Type"/>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="CdhCore_health_HLTH_CHNG_PING_CC">
+          <xtce:EntryList>
+            <xtce:ArgumentRefEntry argumentRef="entry"/>
+            <xtce:ArgumentRefEntry argumentRef="warningValue"/>
+            <xtce:ArgumentRefEntry argumentRef="fatalValue"/>
+          </xtce:EntryList>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">16785410</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x1002002</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">async</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+      <xtce:MetaCommand name="LedBlinker_led_BLINKING_ON_OFF" abstract="false">
+        <xtce:LongDescription>Command to turn on or off the blinking LED</xtce:LongDescription>
+        <xtce:ArgumentList>
+          <xtce:Argument name="onOff" argumentTypeRef="Arg_Enum_Fw_OnType"/>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="LedBlinker_led_BLINKING_ON_OFF_CC">
+          <xtce:EntryList>
+            <xtce:ArgumentRefEntry argumentRef="onOff"/>
+          </xtce:EntryList>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">268455936</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x10005000</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">async</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+      <xtce:MetaCommand name="LedBlinker_led_BLINK_INTERVAL_PRM_SET" abstract="false">
+        <xtce:LongDescription>Blinking interval in rate group ticks</xtce:LongDescription>
+        <xtce:ArgumentList>
+          <xtce:Argument name="val" argumentTypeRef="Arg_Unsigned_32Type"/>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="LedBlinker_led_BLINK_INTERVAL_PRM_SET_CC">
+          <xtce:EntryList>
+            <xtce:ArgumentRefEntry argumentRef="val"/>
+          </xtce:EntryList>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">268455937</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x10005001</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">set</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+      <xtce:MetaCommand name="FileHandling_fileDownlink_SendFile" abstract="false">
+        <xtce:LongDescription>Read a named file off the disk. Divide it into packets and send the packets for transmission to the ground.</xtce:LongDescription>
+        <xtce:ArgumentList>
+          <xtce:Argument name="sourceFileName" argumentTypeRef="Arg_StringType"/>
+          <xtce:Argument name="destFileName" argumentTypeRef="Arg_StringType"/>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="FileHandling_fileDownlink_SendFile_CC">
+          <xtce:EntryList>
+            <xtce:ArgumentRefEntry argumentRef="sourceFileName"/>
+            <xtce:ArgumentRefEntry argumentRef="destFileName"/>
+          </xtce:EntryList>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">83890176</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x5001000</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">async</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+      <xtce:MetaCommand name="FileHandling_fileManager_RemoveFile" abstract="false">
+        <xtce:LongDescription>Remove a file</xtce:LongDescription>
+        <xtce:ArgumentList>
+          <xtce:Argument name="fileName" argumentTypeRef="Arg_StringType"/>
+          <xtce:Argument name="ignoreErrors" argumentTypeRef="Arg_BooleanType"/>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="FileHandling_fileManager_RemoveFile_CC">
+          <xtce:EntryList>
+            <xtce:ArgumentRefEntry argumentRef="fileName"/>
+            <xtce:ArgumentRefEntry argumentRef="ignoreErrors"/>
+          </xtce:EntryList>
+        </xtce:CommandContainer>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="opcode">83894275</xtce:AncillaryData>
+          <xtce:AncillaryData name="opcode_hex">0x5002003</xtce:AncillaryData>
+          <xtce:AncillaryData name="commandKind">async</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+      </xtce:MetaCommand>
+    </xtce:MetaCommandSet>
+  </xtce:CommandMetaData>
+</xtce:SpaceSystem>

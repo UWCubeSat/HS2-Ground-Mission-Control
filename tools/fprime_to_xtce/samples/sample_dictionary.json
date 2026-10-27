@@ -1,0 +1,348 @@
+{
+  "metadata": {
+    "deploymentName": "LedBlinker",
+    "frameworkVersion": "3.4.0",
+    "projectVersion": "1.0.0",
+    "schemaVersion": "1.0"
+  },
+  "commands": [
+    {
+      "name": "CdhCore.cmdDisp.CMD_NO_OP",
+      "opcode": 16777216,
+      "commandKind": "async",
+      "formalParams": [],
+      "annotation": "No-op command"
+    },
+    {
+      "name": "CdhCore.cmdDisp.CMD_NO_OP_STRING",
+      "opcode": 16777217,
+      "commandKind": "async",
+      "formalParams": [
+        {
+          "name": "arg1",
+          "type": { "kind": "string", "name": "string" },
+          "annotation": "String argument"
+        }
+      ],
+      "annotation": "No-op string command"
+    },
+    {
+      "name": "CdhCore.cmdDisp.CMD_TEST_CMD_1",
+      "opcode": 16777218,
+      "commandKind": "async",
+      "formalParams": [
+        {
+          "name": "arg1",
+          "type": { "kind": "integer", "name": "I32", "signed": true, "size": 32 }
+        },
+        {
+          "name": "arg2",
+          "type": { "kind": "float", "name": "F32", "size": 32 }
+        },
+        {
+          "name": "arg3",
+          "type": { "kind": "integer", "name": "U8", "signed": false, "size": 8 }
+        }
+      ],
+      "annotation": "No-op command"
+    },
+    {
+      "name": "CdhCore.cmdDisp.CMD_CLEAR_TRACKING",
+      "opcode": 16777219,
+      "commandKind": "async",
+      "formalParams": [],
+      "annotation": "Clear command tracking info to recover from components not returning status"
+    },
+    {
+      "name": "CdhCore.events.SET_EVENT_FILTER",
+      "opcode": 16781312,
+      "commandKind": "sync",
+      "formalParams": [
+        {
+          "name": "filterLevel",
+          "type": {
+            "kind": "qualifiedIdentifier",
+            "name": "Svc.EventManager.FilterSeverity",
+            "enumeration": [
+              { "name": "WARNING_HI", "value": 0 },
+              { "name": "WARNING_LO", "value": 1 },
+              { "name": "COMMAND", "value": 2 },
+              { "name": "ACTIVITY_HI", "value": 3 },
+              { "name": "ACTIVITY_LO", "value": 4 },
+              { "name": "DIAGNOSTIC", "value": 5 }
+            ]
+          }
+        },
+        {
+          "name": "filterEnabled",
+          "type": {
+            "kind": "qualifiedIdentifier",
+            "name": "Svc.EventManager.Enabled",
+            "enumeration": [
+              { "name": "DISABLED", "value": 0 },
+              { "name": "ENABLED", "value": 1 }
+            ]
+          }
+        }
+      ],
+      "annotation": "Set filter for reporting events. Events are not stored in component."
+    },
+    {
+      "name": "CdhCore.events.SET_ID_FILTER",
+      "opcode": 16781314,
+      "commandKind": "async",
+      "formalParams": [
+        {
+          "name": "ID",
+          "type": { "kind": "integer", "name": "U32", "signed": false, "size": 32 }
+        },
+        {
+          "name": "idFilterEnabled",
+          "type": {
+            "kind": "qualifiedIdentifier",
+            "name": "Svc.EventManager.Enabled",
+            "enumeration": [
+              { "name": "DISABLED", "value": 0 },
+              { "name": "ENABLED", "value": 1 }
+            ]
+          }
+        }
+      ],
+      "annotation": "Filter a particular ID"
+    },
+    {
+      "name": "CdhCore.health.HLTH_ENABLE",
+      "opcode": 16785408,
+      "commandKind": "async",
+      "formalParams": [
+        {
+          "name": "enable",
+          "type": {
+            "kind": "qualifiedIdentifier",
+            "name": "Fw.Enabled",
+            "enumeration": [
+              { "name": "DISABLED", "value": 0 },
+              { "name": "ENABLED", "value": 1 }
+            ]
+          }
+        }
+      ],
+      "annotation": "A command to enable or disable health checks"
+    },
+    {
+      "name": "CdhCore.health.HLTH_PING_ENABLE",
+      "opcode": 16785409,
+      "commandKind": "async",
+      "formalParams": [
+        {
+          "name": "entry",
+          "type": { "kind": "string", "name": "string" }
+        },
+        {
+          "name": "enable",
+          "type": {
+            "kind": "qualifiedIdentifier",
+            "name": "Fw.Enabled",
+            "enumeration": [
+              { "name": "DISABLED", "value": 0 },
+              { "name": "ENABLED", "value": 1 }
+            ]
+          }
+        }
+      ],
+      "annotation": "Ignore a particular ping entry"
+    },
+    {
+      "name": "CdhCore.health.HLTH_CHNG_PING",
+      "opcode": 16785410,
+      "commandKind": "async",
+      "formalParams": [
+        {
+          "name": "entry",
+          "type": { "kind": "string", "name": "string" }
+        },
+        {
+          "name": "warningValue",
+          "type": { "kind": "integer", "name": "U32", "signed": false, "size": 32 }
+        },
+        {
+          "name": "fatalValue",
+          "type": { "kind": "integer", "name": "U32", "signed": false, "size": 32 }
+        }
+      ],
+      "annotation": "Change ping value"
+    },
+    {
+      "name": "LedBlinker.led.BLINKING_ON_OFF",
+      "opcode": 268455936,
+      "commandKind": "async",
+      "formalParams": [
+        {
+          "name": "onOff",
+          "type": {
+            "kind": "qualifiedIdentifier",
+            "name": "Fw.On",
+            "enumeration": [
+              { "name": "OFF", "value": 0 },
+              { "name": "ON", "value": 1 }
+            ]
+          }
+        }
+      ],
+      "annotation": "Command to turn on or off the blinking LED"
+    },
+    {
+      "name": "LedBlinker.led.BLINK_INTERVAL_PRM_SET",
+      "opcode": 268455937,
+      "commandKind": "set",
+      "formalParams": [
+        {
+          "name": "val",
+          "type": { "kind": "integer", "name": "U32", "signed": false, "size": 32 }
+        }
+      ],
+      "annotation": "Blinking interval in rate group ticks"
+    },
+    {
+      "name": "FileHandling.fileDownlink.SendFile",
+      "opcode": 83890176,
+      "commandKind": "async",
+      "formalParams": [
+        {
+          "name": "sourceFileName",
+          "type": { "kind": "string", "name": "string" }
+        },
+        {
+          "name": "destFileName",
+          "type": { "kind": "string", "name": "string" }
+        }
+      ],
+      "annotation": "Read a named file off the disk. Divide it into packets and send the packets for transmission to the ground."
+    },
+    {
+      "name": "FileHandling.fileManager.RemoveFile",
+      "opcode": 83894275,
+      "commandKind": "async",
+      "formalParams": [
+        {
+          "name": "fileName",
+          "type": { "kind": "string", "name": "string" }
+        },
+        {
+          "name": "ignoreErrors",
+          "type": { "kind": "bool", "name": "bool" }
+        }
+      ],
+      "annotation": "Remove a file"
+    }
+  ],
+  "telemetryChannels": [
+    {
+      "name": "LedBlinker.led.BlinkingState",
+      "id": 1,
+      "type": {
+        "kind": "qualifiedIdentifier",
+        "name": "Fw.On",
+        "enumeration": [
+          { "name": "OFF", "value": 0 },
+          { "name": "ON", "value": 1 }
+        ]
+      },
+      "telemetryUpdate": "ON_CHANGE",
+      "annotation": "The blinking state of the LED"
+    },
+    {
+      "name": "LedBlinker.led.LedTransitions",
+      "id": 2,
+      "type": { "kind": "integer", "name": "U64", "signed": false, "size": 64 },
+      "telemetryUpdate": "ALWAYS",
+      "annotation": "The number of LED transitions"
+    },
+    {
+      "name": "LedBlinker.systemResources.MEMORY_TOTAL",
+      "id": 100,
+      "type": { "kind": "integer", "name": "U64", "signed": false, "size": 64 },
+      "units": "KB",
+      "telemetryUpdate": "ALWAYS",
+      "annotation": "Total memory in KB"
+    },
+    {
+      "name": "LedBlinker.systemResources.MEMORY_USED",
+      "id": 101,
+      "type": { "kind": "integer", "name": "U64", "signed": false, "size": 64 },
+      "units": "KB",
+      "telemetryUpdate": "ALWAYS",
+      "annotation": "Used memory in KB"
+    },
+    {
+      "name": "LedBlinker.systemResources.CPU_00",
+      "id": 102,
+      "type": { "kind": "float", "name": "F32", "size": 32 },
+      "units": "%",
+      "telemetryUpdate": "ALWAYS",
+      "annotation": "CPU core 0 utilization"
+    },
+    {
+      "name": "LedBlinker.systemResources.FRAMEWORK_VERSION",
+      "id": 110,
+      "type": { "kind": "string", "name": "string" },
+      "telemetryUpdate": "ON_CHANGE",
+      "annotation": "F Prime framework version string"
+    },
+    {
+      "name": "CdhCore.health.PingLatestsReturn",
+      "id": 200,
+      "type": { "kind": "integer", "name": "U32", "signed": false, "size": 32 },
+      "telemetryUpdate": "ALWAYS",
+      "annotation": "Latest ping return value"
+    }
+  ],
+  "events": [
+    {
+      "name": "LedBlinker.led.SetBlinkingState",
+      "id": 1,
+      "severity": "ACTIVITY_HI",
+      "formatString": "Set blinking state to %s",
+      "formalParams": [
+        {
+          "name": "state",
+          "type": {
+            "kind": "qualifiedIdentifier",
+            "name": "Fw.On",
+            "enumeration": [
+              { "name": "OFF", "value": 0 },
+              { "name": "ON", "value": 1 }
+            ]
+          }
+        }
+      ],
+      "annotation": "LED blinking state changed"
+    },
+    {
+      "name": "LedBlinker.led.BlinkIntervalSet",
+      "id": 2,
+      "severity": "ACTIVITY_LO",
+      "formatString": "Blink interval set to %u",
+      "formalParams": [
+        {
+          "name": "interval",
+          "type": { "kind": "integer", "name": "U32", "signed": false, "size": 32 }
+        }
+      ],
+      "annotation": "LED blink interval was updated"
+    },
+    {
+      "name": "CdhCore.health.HLTH_PING_WARN",
+      "id": 100,
+      "severity": "WARNING_LO",
+      "formatString": "Health check ping %s late",
+      "formalParams": [
+        {
+          "name": "entry",
+          "type": { "kind": "string", "name": "string" }
+        }
+      ],
+      "annotation": "A health ping was late"
+    }
+  ]
+}
