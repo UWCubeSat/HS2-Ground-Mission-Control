@@ -35,8 +35,9 @@ This will also delete Yamcs data. Change the `dataDir` property in `yamcs.yaml` 
 
 ## Telemetry
 
-To start pushing CCSDS packets into Yamcs, run the included Python script:
+To start pushing CCSDS packets into Yamcs, run the included Python script under src/main/simulator:
 
+    cd src/main/simulator
     python simulator.py
 
 This script will send packets at 1 Hz over UDP to Yamcs. There is enough test data to run for a full calendar day.

@@ -32,6 +32,7 @@
       <artifactId>yamcs-web</artifactId>
       <version>${yamcsVersion}</version>
     </dependency>
+    <!-- YAMCS MQTT integration should probably go here -->
   </dependencies>
 
   <build>

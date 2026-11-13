@@ -1,0 +1,21 @@
+# TODO: Implement GitHub Actions workflow for CDH -> Yamcs synchronization.
+#
+# Trigger:
+#   - When a pull request is merged into HS2-CDH/main
+#   - Optionally allow manual execution
+#
+# Retrieve the generated F' dictionary from the HS2-CDH build.
+#
+# Potential files:
+#   build-fprime-automatic-native/FlightComputer/Top/FlightComputerTopologyDictionary.json
+#   build-fprime-automatic-native/FlightComputer/Top/FlightComputer_MySystemSystemDictionary.json
+#
+# TODO:
+#   1. Build HS2-CDH or retrieve its generated build artifact.
+#   2. Determine which dictionary file(s) Ground needs.
+#   3. Run the Python JSON -> XTCE conversion script.
+#   4. Validate generated XTCE against Yamcs.
+#   5. Open a pull request with updated mission database definitions.
+#   (Also see yamcs/commands folder)
+#
+# STATUS: NOT IMPLEMENTED

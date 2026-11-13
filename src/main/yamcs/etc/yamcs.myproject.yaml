@@ -52,7 +52,7 @@ streamConfig:
   tm:
     - name: "tm_realtime"
       processor: "realtime"
-      rootContainer: "/HS2/HS2HousekeepingPacket"
+      rootContainer: "/myproject/CCSDSPacket"
     - name: "tm_dump"
   cmdHist: ["cmdhist_realtime", "cmdhist_dump"]
   event: ["events_realtime", "events_dump"]
