@@ -14,7 +14,7 @@ from xml.etree import ElementTree as ET
 
 import pytest
 
-from fprime_to_xtce import (
+from main.python.fprime_to_xtce import (
     _xtce,
     build_xtce,
     load_json,
