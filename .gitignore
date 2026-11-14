@@ -11,3 +11,8 @@
 
 # Docker logs for CI
 docker/all.log
+
+# Python
+**/__pycache__/
+*.py[codz]
+*$py.class
