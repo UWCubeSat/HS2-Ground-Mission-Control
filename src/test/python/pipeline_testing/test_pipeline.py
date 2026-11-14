@@ -19,7 +19,7 @@ from xml.etree import ElementTree as ET
 
 import pytest
 
-from validate_xtce import (
+from main.python.validate_xtce import (
     ValidationReport,
     check_argument_type_refs,
     check_counts,
