@@ -1,0 +1,15 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./config:/mosquitto/config:ro
+      # Docker-managed volume, so the container's mosquitto user (uid 1883)
+      # owns it and no root/1883-owned folders end up in the repo.
+      - mosquitto-data:/mosquitto/data
+
+volumes:
+  mosquitto-data:
