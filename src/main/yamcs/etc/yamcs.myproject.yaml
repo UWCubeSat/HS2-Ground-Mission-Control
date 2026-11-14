@@ -22,22 +22,40 @@ services:
   - class: org.yamcs.timeline.TimelineService
 
 dataLinks:
-  - name: udp-in
-    class: org.yamcs.tctm.UdpTmDataLink
-    stream: tm_realtime
-    port: 10015
-    packetPreprocessorClassName: com.example.myproject.MyPacketPreprocessor
+  # - name: udp-in
+  #   class: org.yamcs.tctm.UdpTmDataLink
+  #   stream: tm_realtime
+  #   port: 10015
+  #   packetPreprocessorClassName: com.example.myproject.MyPacketPreprocessor
+  #   packetPreprocessorArgs:
+  #     timestampOffset: -1
+  #     seqCountOffset: 2
+  #     byteOrder: BIG_ENDIAN
+
+  # - name: udp-out
+  #   class: org.yamcs.tctm.UdpTcDataLink
+  #   stream: tc_realtime
+  #   host: localhost
+  #   port: 10025
+  #   commandPostprocessorClassName: com.example.myproject.MyCommandPostprocessor
+
+  - name: tmtc
+    class: org.yamcs.mqtt.MqttPacketLink
+    brokers:
+      - tcp://127.0.0.1:1883
+    tmTopic: yamcs-tm
+    tcTopic: yamcs-tc
+    tmStream: tm_realtime
+    tcStream: tc_realtime
+    packetPreprocessorClassName: org.yamcs.tctm.GenericPacketPreprocessor
     packetPreprocessorArgs:
       timestampOffset: -1
       seqCountOffset: 2
-      byteOrder: BIG_ENDIAN
+    # other MQTT options
+    # other link options
 
-  - name: udp-out
-    class: org.yamcs.tctm.UdpTcDataLink
-    stream: tc_realtime
-    host: localhost
-    port: 10025
-    commandPostprocessorClassName: com.example.myproject.MyCommandPostprocessor
+    # relevant info for connecting to leafspace:
+    # https://docs.yamcs.org/yamcs-mqtt/links/packet/
 
 mdb:
   # Configuration of the active loaders
@@ -52,7 +70,10 @@ streamConfig:
   tm:
     - name: "tm_realtime"
       processor: "realtime"
-      rootContainer: "/myproject/CCSDSPacket"
+      # The MQTT simulator emits the 22-byte HS2 housekeeping layout (APID 1),
+      # so decode with the HS2 container. /myproject/CCSDSPacket only yields the
+      # /myproject/Spacecraft params for APID 100 packets from the Yamcs example sim.
+      rootContainer: "/HS2/HS2HousekeepingPacket"
     - name: "tm_dump"
   cmdHist: ["cmdhist_realtime", "cmdhist_dump"]
   event: ["events_realtime", "events_dump"]
@@ -61,4 +82,3 @@ streamConfig:
   tc:
     - name: "tc_realtime"
       processor: "realtime"
-

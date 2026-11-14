@@ -17,6 +17,7 @@
     Check https://mvnrepository.com/artifact/org.yamcs/yamcs-core
     -->
     <yamcsVersion>5.12.0</yamcsVersion>
+    <yamcsMqttVersion>0.2.2</yamcsMqttVersion>
   </properties>
 
   <dependencies>
@@ -32,7 +33,11 @@
       <artifactId>yamcs-web</artifactId>
       <version>${yamcsVersion}</version>
     </dependency>
-    <!-- YAMCS MQTT integration should probably go here -->
+    <dependency>
+      <groupId>org.yamcs</groupId>
+      <artifactId>yamcs-mqtt</artifactId>
+      <version>${yamcsMqttVersion}</version>
+    </dependency>
   </dependencies>
 
   <build>

@@ -33,16 +33,28 @@ Delete all generated outputs and start over:
 This will also delete Yamcs data. Change the `dataDir` property in `yamcs.yaml` to another location on your file system if you don't want that.
 
 
+## Running Mosquitto (MQTT broker)
+
+Yamcs receives telemetry over MQTT (`tmtc` link in `yamcs.myproject.yaml`), so start the local broker on port 1883 before running Yamcs or `tools/pipeline_testing/MQTT_simulator.py`: `cd mosquitto && docker compose up -d` (stop it with `docker compose down`, view logs with `docker compose logs -f`).
+
+
 ## Telemetry
 
-To start pushing CCSDS packets into Yamcs, run the included Python script under src/main/simulator:
+To push CCSDS packets into YAMCS over MQTT, run the new MQTT script:
+```
+python3 tools/pipeline_testing/MQTT_simulator.py
+```
+Make sure Mosquitto (MQTT Broker) is running.
 
-    cd src/main/simulator
-    python simulator.py
+*The following is **deprecated**, we are now using MQTT to match leafspace*
 
-This script will send packets at 1 Hz over UDP to Yamcs. There is enough test data to run for a full calendar day.
+~~To start pushing CCSDS packets into Yamcs, run the included Python script:~~
 
-The packets are a bit artificial and include a mixture of HK and accessory data.
+~~`python simulator.py`~~
+
+~~This script will send packets at 1 Hz over UDP to Yamcs. There is enough test data to run for a full calendar day.~~
+
+~~The packets are a bit artificial and include a mixture of HK and accessory data.~~
 
 
 ## Telecommanding
