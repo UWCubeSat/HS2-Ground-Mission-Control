@@ -1,21 +1,57 @@
-# TODO: Implement GitHub Actions workflow for CDH -> Yamcs synchronization.
-#
-# Trigger:
-#   - When a pull request is merged into HS2-CDH/main
-#   - Optionally allow manual execution
-#
-# Retrieve the generated F' dictionary from the HS2-CDH build.
-#
-# Potential files:
-#   build-fprime-automatic-native/FlightComputer/Top/FlightComputerTopologyDictionary.json
-#   build-fprime-automatic-native/FlightComputer/Top/FlightComputer_MySystemSystemDictionary.json
-#
-# TODO:
-#   1. Build HS2-CDH or retrieve its generated build artifact.
-#   2. Determine which dictionary file(s) Ground needs.
-#   3. Run the Python JSON -> XTCE conversion script.
-#   4. Validate generated XTCE against Yamcs.
-#   5. Open a pull request with updated mission database definitions.
-#   (Also see yamcs/commands folder)
-#
-# STATUS: NOT IMPLEMENTED
+name: Sync CDH Commands
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync-cdh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Ground repository
+        uses: actions/checkout@v4
+
+      - name: Checkout CDH repository
+        uses: actions/checkout@v4
+        with: 
+          repository: UWCubeSat/HS2-CDH
+          path: cdh
+          ref: main
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with: 
+          python-version: '3.11'
+
+      - name: Install CDH dependencies
+        working-directory: cdh
+        run: pip install -r requirements.txt
+      
+      - name: Generate CDH build
+        working-directory: cdh
+        run: fprime-util generate
+
+      - name: Build CDH commands
+        working-directory: cdh
+        run: fprime-util build
+
+      - name: Find CDH dictionary
+        working-directory: cdh
+        run: ls -l build-artifacts/Linux/FlightComputer/dict/FlightComputerTopologyDictionary.json
+
+      - name: Convert Fprime dictionary to XTCE
+        run: python src/main/python/fprime_to_xtce.py --input cdh/build-artifacts/Linux/FlightComputer/dict/FlightComputerTopologyDictionary.json --output src/main/yamcs/commands/commands.xml --validate --verbose
+
+      - name: Validate CDH commands
+        run: python src/main/python/validate_xtce.py --input src/main/yamcs/commands/commands.xml --verbose
+
+      - name: Upload CDH XTCE artifact
+        uses: actions/upload-artifact@v4
+        with: 
+          name: hs2-cdh-xtce
+          path: src/main/yamcs/commands/commands.xml
+          if-no-files-found: error
