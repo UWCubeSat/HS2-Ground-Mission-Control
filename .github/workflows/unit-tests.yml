@@ -19,7 +19,12 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: python -m pip install pytest
+        run: |
+          python -m pip install pytest
+          python -m pip install ruff
+        
+      - name: Run Ruff linting
+        run: ruff check . --output-format=github || true # Remove the || true at some point
 
       - name: Run Python unit tests
         run: python -m pytest src/test/python/ -v
