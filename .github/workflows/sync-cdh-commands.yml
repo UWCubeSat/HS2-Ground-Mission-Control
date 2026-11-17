@@ -18,9 +18,14 @@ jobs:
         with: 
           repository: UWCubeSat/HS2-CDH
           path: cdh
+          ssh-key: ${{ secrets.CDH }}
           ref: main
-          submodules: recursive
+          submodules: false
           persist-credentials: false
+
+      - name: Initialize CDH submodules
+        working-directory: cdh
+        run: git submodule update --init --recursive lib/fprime lib/fprime-geometry-types
 
       - name: Set up Python
         uses: actions/setup-python@v5
