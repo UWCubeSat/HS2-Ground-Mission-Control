@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+"""
+This is the old DEPRECATED simulator.py file. 
+It has been replaced by the new simulator_mqtt.py file, which uses MQTT for telemetry and telecommand simulation.
+"""
+
 import binascii
 import io
 import socket

@@ -40,22 +40,17 @@ Yamcs receives telemetry over MQTT (`tmtc` link in `yamcs.myproject.yaml`), so s
 
 ## Telemetry
 
-To push CCSDS packets into YAMCS over MQTT, run the new MQTT script:
+To push CCSDS packets into YAMCS over MQTT, first install the paho.mqtt library:
 ```
-python3 tools/pipeline_testing/MQTT_simulator.py
+python3 -m venv venv
+source venv/bin/activate
+pip3 install paho.mqtt
+```
+And run the new MQTT script:
+```
+python3 src/main/simulator/mqtt_simulator.py
 ```
 Make sure Mosquitto (MQTT Broker) is running.
-
-*The following is **deprecated**, we are now using MQTT to match leafspace*
-
-~~To start pushing CCSDS packets into Yamcs, run the included Python script:~~
-
-~~`python simulator.py`~~
-
-~~This script will send packets at 1 Hz over UDP to Yamcs. There is enough test data to run for a full calendar day.~~
-
-~~The packets are a bit artificial and include a mixture of HK and accessory data.~~
-
 
 ## Telecommanding
 

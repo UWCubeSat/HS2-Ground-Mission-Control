@@ -16,3 +16,6 @@ docker/all.log
 **/__pycache__/
 *.py[codz]
 *$py.class
+
+# Python virtual environments
+venv/
