@@ -27,10 +27,11 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # XTCE namespace constants
 # ---------------------------------------------------------------------------
-XTCE_NS = "http://www.omg.org/space/xtce"
+XTCE_NS = "http://www.omg.org/spec/XTCE/20180204"
 XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
+FPRIME_OPCODE_SIZE_BYTES = 4  # FlightComputer uses an unsigned 32-bit FwOpcodeType.
 SCHEMA_LOC = (
-    "http://www.omg.org/space/xtce "
+    "http://www.omg.org/spec/XTCE/20180204 "
     "https://www.omg.org/spec/XTCE/20180204/SpaceSystem.xsd"
 )
 
@@ -59,6 +60,16 @@ class FPrimeType:
     size: int = 32
     enum_values: list[EnumValue] = field(default_factory=list)
 
+    # Array support
+    element_type: FPrimeType | None = None
+    array_size: int | None = None
+
+    # Struct support
+    # Ordered: (member name, member type) pairs
+    members: list[tuple[str, FPrimeType]] = field(default_factory=list)
+
+    # Strings
+    string_size: int | None = None
 
 @dataclass
 class FPrimeParam:
@@ -131,68 +142,197 @@ def load_json(path: Path) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 def _parse_enum_values(type_obj: dict[str, Any]) -> list[EnumValue]:
-    values: list[EnumValue] = []
-    for item in type_obj.get("enumeration", []):
-        label = item.get("name", item.get("label", "UNKNOWN"))
-        value = item.get("value", 0)
-        try:
-            value = int(value)
-        except (TypeError, ValueError):
-            logger.warning("Non-integer enum value for %s, defaulting to 0", label)
-            value = 0
-        values.append(EnumValue(label=label, value=value))
+
+    items = type_obj.get(
+        "enumeratedConstants",
+        type_obj.get("enumeration", []),
+    )
+
+    if not isinstance(items, list):
+        raise ValueError("Enum constants must be a list")
+
+    values = []
+
+    for item in items:
+        if not isinstance(item, dict):
+            raise ValueError(
+                f"Invalid enum constant: {item!r}"
+            )
+
+        values.append(
+            EnumValue(
+                label=item.get(
+                    "name",
+                    item.get("label", "UNKNOWN"),
+                ),
+                value=int(item["value"]),
+            )
+        )
+
     return values
 
+def _parse_type(type_obj: dict[str, Any] | None, context: str = "", type_definitions: dict[str, Any] | None = None, resolving: frozenset[str] = frozenset(),) -> FPrimeType:
 
-def _parse_type(type_obj: dict[str, Any] | None, context: str = "") -> FPrimeType:
-    if type_obj is None:
-        logger.warning("Missing type for %s, defaulting to U32", context)
-        return FPrimeType(kind="integer", name="U32", signed=False, size=32)
+    if not isinstance(type_obj, dict):
+        raise ValueError(f"Missing or invalid type for {context}")
 
     kind = type_obj.get("kind", "")
-    name = type_obj.get("name", "")
+    name = type_obj.get("name", type_obj.get("qualifiedName", ""))
 
+    # Resolve named F Prime types
+    if kind == "qualifiedIdentifier":
+        definition = (type_definitions or {}).get(name)
+
+        if definition is None:
+            raise ValueError(
+                f"Unknown named type {name!r} in {context}"
+            )
+
+        if name in resolving:
+            raise ValueError(
+                f"Recursive type definition involving {name!r}"
+            )
+
+        resolved = resolving | {name}
+
+        if definition.get("kind") == "alias":
+            return _parse_type(
+                definition.get("type"),
+                context,
+                type_definitions,
+                resolved,
+            )
+
+        return _parse_type(
+            definition,
+            context,
+            type_definitions,
+            resolved,
+        )
+
+    # Integers
     if kind == "integer":
-        signed = type_obj.get("signed", True)
-        size = type_obj.get("size", 32)
-        prefix = "I" if signed else "U"
-        resolved_name = name or f"{prefix}{size}"
-        return FPrimeType(kind="integer", name=resolved_name, signed=signed, size=size)
+        signed = bool(type_obj.get("signed", True))
+        size = int(type_obj.get("size", 32))
 
+        return FPrimeType(
+            kind="integer",
+            name=name or f"{'I' if signed else 'U'}{size}",
+            signed=signed,
+            size=size,
+        )
+
+    # Floating-point numbers
     if kind == "float":
-        size = type_obj.get("size", 32)
-        resolved_name = name or f"F{size}"
-        return FPrimeType(kind="float", name=resolved_name, size=size)
+        size = int(type_obj.get("size", 32))
 
+        return FPrimeType(
+            kind="float",
+            name=name or f"F{size}",
+            size=size,
+        )
+
+    # Booleans
     if kind == "bool":
         return FPrimeType(kind="bool", name="bool")
 
+    # Strings
     if kind == "string":
-        return FPrimeType(kind="string", name="string")
+        size = type_obj.get("size")
 
-    if kind == "qualifiedIdentifier":
-        enum_values = _parse_enum_values(type_obj)
-        if enum_values:
-            return FPrimeType(kind="enum", name=name, enum_values=enum_values)
-        return FPrimeType(kind="qualifiedIdentifier", name=name)
+        return FPrimeType(
+            kind="string",
+            name="string",
+            string_size=int(size) if size is not None else None,
+        )
 
+    # Enums
+    if kind == "enum":
+        representation = type_obj.get("representationType", {})
+
+        return FPrimeType(
+            kind="enum",
+            name=name,
+            signed=bool(representation.get("signed", False)),
+            size=int(representation.get("size", 32)),
+            enum_values=_parse_enum_values(type_obj),
+        )
+
+    # Arrays
     if kind == "array":
-        logger.warning("Array type not fully supported for %s, mapping as string", context)
-        return FPrimeType(kind="string", name="string")
+        count = int(type_obj["size"])
 
+        if count < 1:
+            raise ValueError(
+                f"Invalid array size for {name}: {count}"
+            )
+
+        element_type = _parse_type(
+            type_obj.get("elementType"),
+            context=f"{context}[]",
+            type_definitions=type_definitions,
+            resolving=resolving,
+        )
+
+        return FPrimeType(
+            kind="array",
+            name=name or context,
+            array_size=count,
+            element_type=element_type,
+        )
+
+    # Structs
     if kind == "struct":
-        logger.warning("Struct type not fully supported for %s, mapping as string", context)
-        return FPrimeType(kind="string", name="string")
+        raw_members = type_obj.get("members")
 
-    logger.warning("Unknown type kind '%s' for %s, defaulting to string", kind, context)
-    return FPrimeType(kind="string", name="string")
+        if not isinstance(raw_members, dict):
+            raise ValueError(
+                f"Invalid struct members for {name}"
+            )
+
+        ordered = sorted(
+            raw_members.items(),
+            key=lambda item: int(item[1]["index"]),
+        )
+
+        indexes = [
+            int(member["index"])
+            for _, member in ordered
+        ]
+
+        if indexes != list(range(len(indexes))):
+            raise ValueError(
+                f"Invalid member indexes in {name}"
+            )
+
+        members = []
+
+        for member_name, member in ordered:
+            member_type = _parse_type(
+                member["type"],
+                context=f"{context}.{member_name}",
+                type_definitions=type_definitions,
+                resolving=resolving,
+            )
+
+            members.append((member_name, member_type))
+
+        return FPrimeType(
+            kind="struct",
+            name=name or context,
+            members=members,
+        )
+
+    raise ValueError(
+        f"Unsupported type kind {kind!r} for {context}"
+    )
 
 
-def _parse_formal_params(raw_params: list[dict[str, Any]]) -> list[FPrimeParam]:
+def _parse_formal_params(raw_params: list[dict[str, Any]], type_definitions: dict[str, Any] | None = None,) -> list[FPrimeParam]:
     params: list[FPrimeParam] = []
     for p in raw_params:
         pname = p.get("name", "unnamed")
-        ptype = _parse_type(p.get("type"), context=pname)
+        ptype = _parse_type(p.get("type"), context=pname, type_definitions=type_definitions,)
         desc = p.get("annotation", p.get("comment", ""))
         default = p.get("default")
         units_obj = p.get("units")
@@ -219,6 +359,12 @@ def parse_dictionary(data: dict[str, Any]) -> FPrimeDictionary:
 
     dictionary = FPrimeDictionary(deployment_name=deployment_name)
 
+    # Named types defined in the F Prime dictionary
+    type_definitions = {
+                        definition["qualifiedName"]: definition
+                        for definition in data.get("typeDefinitions", [])
+                        }
+
     # Commands
     for raw in data.get("commands", []):
         try:
@@ -227,13 +373,15 @@ def parse_dictionary(data: dict[str, Any]) -> FPrimeDictionary:
                 name=raw.get("name", "UNKNOWN_CMD"),
                 opcode=int(opcode),
                 kind=raw.get("commandKind", "async"),
-                params=_parse_formal_params(raw.get("formalParams", [])),
+                params=_parse_formal_params(raw.get("formalParams", []), type_definitions=type_definitions),
                 description=raw.get("annotation", raw.get("comment", "")),
             )
             dictionary.commands.append(cmd)
             logger.debug("Parsed command: %s (0x%X)", cmd.name, cmd.opcode)
         except Exception as exc:
-            logger.warning("Skipping command %s: %s", raw.get("name", "?"), exc)
+             raise ValueError(
+                f"Cannot parse command {raw.get('name', '?')}: {exc}"
+            ) from exc
 
     # Telemetry channels
     for raw in data.get("telemetryChannels", []):
@@ -243,7 +391,7 @@ def parse_dictionary(data: dict[str, Any]) -> FPrimeDictionary:
             tlm = FPrimeTelemetry(
                 name=raw.get("name", "UNKNOWN_CH"),
                 channel_id=int(ch_id),
-                fprime_type=_parse_type(raw.get("type"), context=raw.get("name", "?")),
+                fprime_type=_parse_type(raw.get("type"), context=raw.get("name", "?"), type_definitions=type_definitions),
                 description=raw.get("annotation", raw.get("comment", "")),
                 units=units_obj if isinstance(units_obj, str) else None,
                 update_policy=raw.get("telemetryUpdate", ""),
@@ -252,7 +400,9 @@ def parse_dictionary(data: dict[str, Any]) -> FPrimeDictionary:
             dictionary.telemetry.append(tlm)
             logger.debug("Parsed telemetry: %s (0x%X)", tlm.name, tlm.channel_id)
         except Exception as exc:
-            logger.warning("Skipping telemetry %s: %s", raw.get("name", "?"), exc)
+             raise ValueError(
+                f"Cannot parse telemetry {raw.get('name', '?')}: {exc}"
+            ) from exc
 
     # Events
     for raw in data.get("events", []):
@@ -262,13 +412,15 @@ def parse_dictionary(data: dict[str, Any]) -> FPrimeDictionary:
                 event_id=int(raw.get("id", raw.get("eventId", 0))),
                 severity=raw.get("severity", "DIAGNOSTIC"),
                 format_string=raw.get("formatString", ""),
-                params=_parse_formal_params(raw.get("formalParams", [])),
+                params=_parse_formal_params(raw.get("formalParams", []), type_definitions=type_definitions),
                 description=raw.get("annotation", raw.get("comment", "")),
             )
             dictionary.events.append(ev)
             logger.debug("Parsed event: %s (0x%X)", ev.name, ev.event_id)
         except Exception as exc:
-            logger.warning("Skipping event %s: %s", raw.get("name", "?"), exc)
+            raise ValueError(
+                f"Cannot parse event {raw.get('name', '?')}: {exc}"
+            ) from exc
 
     logger.info(
         "Parsed dictionary '%s': %d commands, %d telemetry channels, %d events",
@@ -286,245 +438,260 @@ def parse_dictionary(data: dict[str, Any]) -> FPrimeDictionary:
 
 _SEEN_ENUM_TYPES: dict[str, str] = {}
 
-
-def _xtce_type_name(fprime_type: FPrimeType, param_name: str = "") -> str:
+def _xtce_type_name(fprime_type: FPrimeType, param_name: str = "",) -> str:
     kind = fprime_type.kind
+
     if kind == "integer":
         prefix = "Integer" if fprime_type.signed else "Unsigned"
         return f"{prefix}_{fprime_type.size}Type"
+
     if kind == "float":
         return f"Float_{fprime_type.size}Type"
+
     if kind == "bool":
         return "BooleanType"
+
     if kind == "string":
+        if fprime_type.string_size is not None:
+            return f"String_{fprime_type.string_size}Type"
         return "StringType"
-    if kind in ("enum", "qualifiedIdentifier"):
-        safe = fprime_type.name.replace(".", "_").replace(" ", "_")
-        return f"Enum_{safe}Type"
-    return "StringType"
+
+    if kind == "array":
+        return f"Array_{_safe_param_name(fprime_type.name)}Type"
+
+    if kind == "struct":
+        return f"Struct_{_safe_param_name(fprime_type.name)}Type"
+
+    if kind == "enum":
+        return f"Enum_{_safe_param_name(fprime_type.name)}Type"
+
+    raise ValueError(f"Unsupported type: {kind}")
 
 
-def _argument_type_name(fprime_type: FPrimeType, param_name: str = "") -> str:
-    base = _xtce_type_name(fprime_type, param_name)
-    return f"Arg_{base}"
+def _argument_type_name(fprime_type: FPrimeType, param_name: str = "",) -> str:
+    return f"Arg_{_xtce_type_name(fprime_type, param_name)}"
 
+def _add_types(type_set: ET.Element, types: list[FPrimeType], argument: bool,) -> None:
+    """Generate XTCE types, including nested arrays and structs."""
 
-# ---------------------------------------------------------------------------
-# XTCE XML builder
-# ---------------------------------------------------------------------------
-
-def _make_root(deployment_name: str) -> ET.Element:
-    root = ET.Element(
-        _xtce("SpaceSystem"),
-        attrib={
-            "name": deployment_name,
-            f"{{{XSI_NS}}}schemaLocation": SCHEMA_LOC,
-        },
-    )
-    header = ET.SubElement(root, _xtce("Header"))
-    header.set("validationStatus", "Draft")
-    header.set("classification", "NotClassified")
-    history = ET.SubElement(header, _xtce("History"))
-    entry = ET.SubElement(history, _xtce("HistoryEntry"))
-    entry.set("purpose", "creation")
-    ET.SubElement(entry, _xtce("Comment")).text = (
-        f"Generated from F Prime dictionary for deployment: {deployment_name}"
-    )
-    return root
-
-
-def _add_telemetry_parameter_types(
-    type_set: ET.Element,
-    tlm_list: list[FPrimeTelemetry],
-    events: list[FPrimeEvent],
-) -> set[str]:
     added: set[str] = set()
 
-    def _add_integer(signed: bool, size: int) -> None:
-        prefix = "Integer" if signed else "Unsigned"
-        tname = f"{prefix}_{size}Type"
+    suffix = "ArgumentType" if argument else "ParameterType"
+
+    def ref(t: FPrimeType) -> str:
+        if argument:
+            return _argument_type_name(t)
+        return _xtce_type_name(t)
+
+    def add(t: FPrimeType) -> None:
+        tname = ref(t)
+
         if tname in added:
             return
+
+        # Generate dependencies first
+        if t.kind == "array":
+            if t.element_type is None or t.array_size is None:
+                raise ValueError(f"Incomplete array {t.name}")
+
+            add(t.element_type)
+
+        elif t.kind == "struct":
+            for _, member_type in t.members:
+                add(member_type)
+
         added.add(tname)
-        el = ET.SubElement(type_set, _xtce("IntegerParameterType"), attrib={"name": tname})
-        enc = ET.SubElement(el, _xtce("IntegerDataEncoding"))
-        enc.set("sizeInBits", str(size))
-        enc.set("encoding", "signed" if signed else "unsigned")
 
-    def _add_float(size: int) -> None:
-        tname = f"Float_{size}Type"
-        if tname in added:
-            return
-        added.add(tname)
-        el = ET.SubElement(type_set, _xtce("FloatParameterType"), attrib={"name": tname})
-        enc = ET.SubElement(el, _xtce("FloatDataEncoding"))
-        enc.set("sizeInBits", str(size))
-        enc.set("encoding", "IEEE754_1985" if size in (32, 64) else "IEEE754_1985")
+        kind_tags = {
+            "integer": "Integer",
+            "float": "Float",
+            "bool": "Boolean",
+            "string": "String",
+            "enum": "Enumerated",
+            "array": "Array",
+            "struct": "Aggregate",
+        }
 
-    def _add_bool() -> None:
-        tname = "BooleanType"
-        if tname in added:
-            return
-        added.add(tname)
-        el = ET.SubElement(type_set, _xtce("BooleanParameterType"), attrib={"name": tname})
-        enc = ET.SubElement(el, _xtce("IntegerDataEncoding"))
-        enc.set("sizeInBits", "8")
-        enc.set("encoding", "unsigned")
+        if t.kind not in kind_tags:
+            raise ValueError(
+                f"Cannot generate XTCE type for {t.kind}: {t.name}"
+            )
 
-    def _add_string() -> None:
-        tname = "StringType"
-        if tname in added:
-            return
-        added.add(tname)
-        el = ET.SubElement(type_set, _xtce("StringParameterType"), attrib={"name": tname})
-        enc = ET.SubElement(el, _xtce("StringDataEncoding"))
-        enc.set("encoding", "UTF-8")
+        el = ET.SubElement(
+            type_set,
+            _xtce(kind_tags[t.kind] + suffix),
+            {"name": tname},
+        )
 
-    def _add_enum(fprime_type: FPrimeType) -> None:
-        tname = _xtce_type_name(fprime_type)
-        if tname in added:
-            return
-        added.add(tname)
-        el = ET.SubElement(type_set, _xtce("EnumeratedParameterType"), attrib={"name": tname})
-        enc = ET.SubElement(el, _xtce("IntegerDataEncoding"))
-        enc.set("sizeInBits", "32")
-        enc.set("encoding", "unsigned")
-        enum_list = ET.SubElement(el, _xtce("EnumerationList"))
-        for ev in fprime_type.enum_values:
-            e = ET.SubElement(enum_list, _xtce("Enumeration"))
-            e.set("label", ev.label)
-            e.set("value", str(ev.value))
+        # Integer, enum, and boolean encoding
+        if t.kind in ("integer", "enum", "bool"):
 
-    def _dispatch(fprime_type: FPrimeType) -> None:
-        k = fprime_type.kind
-        if k == "integer":
-            _add_integer(fprime_type.signed, fprime_type.size)
-        elif k == "float":
-            _add_float(fprime_type.size)
-        elif k == "bool":
-            _add_bool()
-        elif k == "string":
-            _add_string()
-        elif k in ("enum", "qualifiedIdentifier"):
-            if fprime_type.enum_values:
-                _add_enum(fprime_type)
-            else:
-                _add_string()
-        else:
-            _add_string()
+            # Define binary encoding
+            enc = ET.SubElement(
+                el,
+                _xtce("IntegerDataEncoding"),
+            )
 
-    for tlm in tlm_list:
-        _dispatch(tlm.fprime_type)
-    for evt in events:
-        for p in evt.params:
-            _dispatch(p.fprime_type)
+            enc.set(
+                "sizeInBits",
+                str(8 if t.kind == "bool" else t.size),
+            )
 
-    return added
+            enc.set(
+                "encoding",
+                "twosComplement"
+                if t.signed and t.kind != "bool"
+                else "unsigned",
+            )
+
+            # XTCE places enum values after the binary encoding.
+            if t.kind == "enum":
+                enum_list = ET.SubElement(
+                    el,
+                    _xtce("EnumerationList"),
+                )
+
+                for ev in t.enum_values:
+                    ET.SubElement(
+                        enum_list,
+                        _xtce("Enumeration"),
+                        {
+                            "label": ev.label,
+                            "value": str(ev.value),
+                        },
+                    )
+
+        # Floating-point encoding
+        elif t.kind == "float":
+            enc = ET.SubElement(
+                el,
+                _xtce("FloatDataEncoding"),
+            )
+
+            enc.set("sizeInBits", str(t.size))
+            enc.set("encoding", "IEEE754_1985")
+
+        # String encoding
+        elif t.kind == "string":
+            enc = ET.SubElement(
+                el,
+                _xtce("StringDataEncoding"),
+            )
+
+            enc.set("encoding", "UTF-8")
+
+            if t.string_size is not None:
+                size = ET.SubElement(
+                    enc,
+                    _xtce("SizeInBits"),
+                )
+
+                fixed = ET.SubElement(
+                    size,
+                    _xtce("Fixed"),
+                )
+
+                ET.SubElement(
+                    fixed,
+                    _xtce("FixedValue"),
+                ).text = str(t.string_size * 8)
+
+        # Array encoding
+        elif t.kind == "array":
+            el.set("arrayTypeRef", ref(t.element_type))
+
+            dimensions = ET.SubElement(
+                el,
+                _xtce("DimensionList"),
+            )
+
+            dim = ET.SubElement(
+                dimensions,
+                _xtce("Dimension"),
+            )
+
+            starting = ET.SubElement(
+                dim,
+                _xtce("StartingIndex"),
+            )
+
+            ET.SubElement(
+                starting,
+                _xtce("FixedValue"),
+            ).text = "0"
+
+            ending = ET.SubElement(
+                dim,
+                _xtce("EndingIndex"),
+            )
+
+            ET.SubElement(
+                ending,
+                _xtce("FixedValue"),
+            ).text = str(t.array_size - 1)
+
+        # Struct encoding
+        elif t.kind == "struct":
+            member_list = ET.SubElement(
+                el,
+                _xtce("MemberList"),
+            )
+
+            for member_name, member_type in t.members:
+                ET.SubElement(
+                    member_list,
+                    _xtce("Member"),
+                    {
+                        "name": member_name,
+                        "typeRef": ref(member_type),
+                    },
+                )
+
+    for t in types:
+        add(t)
 
 
-def _add_argument_types(
-    type_set: ET.Element,
-    commands: list[FPrimeCommand],
-) -> None:
-    added: set[str] = set()
+def _add_telemetry_parameter_types(type_set: ET.Element, tlm_list: list[FPrimeTelemetry], events: list[FPrimeEvent],) -> set[str]:
 
-    def _add_int_arg(signed: bool, size: int) -> None:
-        prefix = "Integer" if signed else "Unsigned"
-        tname = f"Arg_Integer_{size}Type" if signed else f"Arg_Unsigned_{size}Type"
-        if tname in added:
-            return
-        added.add(tname)
-        el = ET.SubElement(type_set, _xtce("IntegerArgumentType"), attrib={"name": tname})
-        enc = ET.SubElement(el, _xtce("IntegerDataEncoding"))
-        enc.set("sizeInBits", str(size))
-        enc.set("encoding", "signed" if signed else "unsigned")
+    types = [
+        tlm.fprime_type
+        for tlm in tlm_list
+    ]
 
-    def _add_float_arg(size: int) -> None:
-        tname = f"Arg_Float_{size}Type"
-        if tname in added:
-            return
-        added.add(tname)
-        el = ET.SubElement(type_set, _xtce("FloatArgumentType"), attrib={"name": tname})
-        enc = ET.SubElement(el, _xtce("FloatDataEncoding"))
-        enc.set("sizeInBits", str(size))
-        enc.set("encoding", "IEEE754_1985")
+    types.extend(
+        p.fprime_type
+        for evt in events
+        for p in evt.params
+    )
 
-    def _add_bool_arg() -> None:
-        tname = "Arg_BooleanType"
-        if tname in added:
-            return
-        added.add(tname)
-        el = ET.SubElement(type_set, _xtce("IntegerArgumentType"), attrib={"name": tname})
-        enc = ET.SubElement(el, _xtce("IntegerDataEncoding"))
-        enc.set("sizeInBits", "8")
-        enc.set("encoding", "unsigned")
+    _add_types(
+        type_set,
+        types,
+        argument=False,
+    )
 
-    def _add_string_arg() -> None:
-        tname = "Arg_StringType"
-        if tname in added:
-            return
-        added.add(tname)
-        el = ET.SubElement(type_set, _xtce("StringArgumentType"), attrib={"name": tname})
-        enc = ET.SubElement(el, _xtce("StringDataEncoding"))
-        enc.set("encoding", "UTF-8")
+    return {
+        el.get("name", "")
+        for el in type_set
+    }
 
-    def _add_enum_arg(fprime_type: FPrimeType) -> None:
-        safe = fprime_type.name.replace(".", "_").replace(" ", "_")
-        tname = f"Arg_Enum_{safe}Type"
-        if tname in added:
-            return
-        added.add(tname)
-        el = ET.SubElement(type_set, _xtce("EnumeratedArgumentType"), attrib={"name": tname})
-        enc = ET.SubElement(el, _xtce("IntegerDataEncoding"))
-        enc.set("sizeInBits", "32")
-        enc.set("encoding", "unsigned")
-        if fprime_type.enum_values:
-            enum_list = ET.SubElement(el, _xtce("EnumerationList"))
-            for ev in fprime_type.enum_values:
-                e = ET.SubElement(enum_list, _xtce("Enumeration"))
-                e.set("label", ev.label)
-                e.set("value", str(ev.value))
 
-    def _dispatch(fprime_type: FPrimeType) -> None:
-        k = fprime_type.kind
-        if k == "integer":
-            _add_int_arg(fprime_type.signed, fprime_type.size)
-        elif k == "float":
-            _add_float_arg(fprime_type.size)
-        elif k == "bool":
-            _add_bool_arg()
-        elif k == "string":
-            _add_string_arg()
-        elif k in ("enum", "qualifiedIdentifier"):
-            if fprime_type.enum_values:
-                _add_enum_arg(fprime_type)
-            else:
-                _add_string_arg()
-        else:
-            _add_string_arg()
+def _add_argument_types(type_set: ET.Element, commands: list[FPrimeCommand],) -> None:
 
-    for cmd in commands:
-        for p in cmd.params:
-            _dispatch(p.fprime_type)
+    types = [
+        p.fprime_type
+        for cmd in commands
+        for p in cmd.params
+    ]
 
+    _add_types(
+        type_set,
+        types,
+        argument=True,
+    )
 
 def _arg_type_ref(fprime_type: FPrimeType) -> str:
-    k = fprime_type.kind
-    if k == "integer":
-        prefix = "Integer" if fprime_type.signed else "Unsigned"
-        return f"Arg_{prefix}_{fprime_type.size}Type"
-    if k == "float":
-        return f"Arg_Float_{fprime_type.size}Type"
-    if k == "bool":
-        return "Arg_BooleanType"
-    if k == "string":
-        return "Arg_StringType"
-    if k in ("enum", "qualifiedIdentifier"):
-        if fprime_type.enum_values:
-            safe = fprime_type.name.replace(".", "_").replace(" ", "_")
-            return f"Arg_Enum_{safe}Type"
-        return "Arg_StringType"
-    return "Arg_StringType"
+    return _argument_type_name(fprime_type)
 
 
 def _safe_param_name(name: str) -> str:
@@ -618,26 +785,6 @@ def _add_command_meta(
             ld = ET.SubElement(mc, _xtce("LongDescription"))
             ld.text = cmd.description
 
-        # Argument list
-        if cmd.params:
-            arg_list = ET.SubElement(mc, _xtce("ArgumentList"))
-            for p in cmd.params:
-                arg = ET.SubElement(arg_list, _xtce("Argument"))
-                arg.set("name", _safe_param_name(p.name))
-                arg.set("argumentTypeRef", _arg_type_ref(p.fprime_type))
-                if p.description:
-                    ld = ET.SubElement(arg, _xtce("LongDescription"))
-                    ld.text = p.description
-
-        # CommandContainer with opcode fixed value
-        cc = ET.SubElement(mc, _xtce("CommandContainer"))
-        cc.set("name", f"{cname}_CC")
-        entry_list = ET.SubElement(cc, _xtce("EntryList"))
-
-        for p in cmd.params:
-            ae = ET.SubElement(entry_list, _xtce("ArgumentRefEntry"))
-            ae.set("argumentRef", _safe_param_name(p.name))
-
         # Ancillary data for opcode
         ancillary = ET.SubElement(mc, _xtce("AncillaryDataSet"))
         ad = ET.SubElement(ancillary, _xtce("AncillaryData"))
@@ -652,7 +799,56 @@ def _add_command_meta(
         ad_kind.set("name", "commandKind")
         ad_kind.text = cmd.kind
 
+        # Argument list
+        if cmd.params:
+            arg_list = ET.SubElement(mc, _xtce("ArgumentList"))
+            for p in cmd.params:
+                arg = ET.SubElement(arg_list, _xtce("Argument"))
+                arg.set("name", _safe_param_name(p.name))
+                arg.set("argumentTypeRef", _arg_type_ref(p.fprime_type))
+                if p.description:
+                    ld = ET.SubElement(arg, _xtce("LongDescription"))
+                    ld.text = p.description
+
+        # F Prime command data starts with the big-endian opcode before arguments.
+        cc = ET.SubElement(mc, _xtce("CommandContainer"))
+        cc.set("name", f"{cname}_CC")
+        entry_list = ET.SubElement(cc, _xtce("EntryList"))
+        try:
+            opcode_bytes = cmd.opcode.to_bytes(FPRIME_OPCODE_SIZE_BYTES, "big")
+        except OverflowError as exc:
+            raise ValueError(f"Opcode for {cmd.name} is outside the unsigned 32-bit range: {cmd.opcode}") from exc
+        ET.SubElement(
+            entry_list,
+            _xtce("FixedValueEntry"),
+            name="opcode",
+            binaryValue=opcode_bytes.hex().upper(),
+            sizeInBits=str(FPRIME_OPCODE_SIZE_BYTES * 8),
+        )
+
+        for p in cmd.params:
+            ae = ET.SubElement(entry_list, _xtce("ArgumentRefEntry"))
+            ae.set("argumentRef", _safe_param_name(p.name))
+
     logger.info("Built CommandMetaData: %d commands", len(seen))
+
+
+def _make_root(deployment_name: str) -> ET.Element:
+    """Create the XTCE SpaceSystem root element."""
+    # XTCE identifiers cannot contain dots or spaces.
+    safe_name = _safe_param_name(deployment_name)
+    root = ET.Element(
+        _xtce("SpaceSystem"),
+        {
+            "name": safe_name,
+            f"{{{XSI_NS}}}schemaLocation": SCHEMA_LOC,
+        },
+    )
+    header = ET.SubElement(root, _xtce("Header"))
+    header.set("version", "1.0")
+    header.set("date", "2026-11-18")
+    header.set("validationStatus", "Unknown")
+    return root
 
 
 def build_xtce(dictionary: FPrimeDictionary) -> ET.Element:
@@ -724,25 +920,82 @@ def validate_xtce(path: Path) -> bool:
         logger.error("Duplicate MetaCommand names detected: %s", dup_cmds)
         ok = False
 
-    # Verify parameterTypeRef links
-    type_names = {
-        el.get("name", "")
+        # Collect defined parameter and argument types
+    parameter_types = {
+        el.get("name")
         for el in root.iter()
-        if el.tag.endswith("ParameterType")
-        or "EnumeratedParameterType" in el.tag
-        or "IntegerParameterType" in el.tag
-        or "FloatParameterType" in el.tag
-        or "BooleanParameterType" in el.tag
-        or "StringParameterType" in el.tag
+        if el.tag.startswith(f"{{{XTCE_NS}}}")
+        and el.tag.endswith("ParameterType")
     }
+
+    argument_types = {
+        el.get("name")
+        for el in root.iter()
+        if el.tag.startswith(f"{{{XTCE_NS}}}")
+        and el.tag.endswith("ArgumentType")
+    }
+
+    # Validate telemetry parameter references
     for param in root.iter(_xtce("Parameter")):
-        ref = param.get("parameterTypeRef", "")
-        if ref and ref not in type_names:
-            logger.warning(
+        ref = param.get("parameterTypeRef")
+        if not ref or ref not in parameter_types:
+            logger.error(
                 "Parameter '%s' references undefined type '%s'",
                 param.get("name"),
                 ref,
             )
+            ok = False
+
+    # Validate command argument references
+    for arg in root.iter(_xtce("Argument")):
+        ref = arg.get("argumentTypeRef")
+        if not ref or ref not in argument_types:
+            logger.error(
+                "Argument '%s' references undefined type '%s'",
+                arg.get("name"),
+                ref,
+            )
+            ok = False
+
+    # Validate nested array and struct type references
+    for el in root.iter():
+        if el.tag in (
+            _xtce("ArrayParameterType"),
+            _xtce("AggregateParameterType"),
+        ):
+            valid_types = parameter_types
+        elif el.tag in (
+            _xtce("ArrayArgumentType"),
+            _xtce("AggregateArgumentType"),
+        ):
+            valid_types = argument_types
+        else:
+            continue
+
+        if el.tag in (
+            _xtce("ArrayParameterType"),
+            _xtce("ArrayArgumentType"),
+        ):
+            ref = el.get("arrayTypeRef")
+            if not ref or ref not in valid_types:
+                logger.error(
+                    "Array type '%s' references undefined element type '%s'",
+                    el.get("name"),
+                    ref,
+                )
+                ok = False
+
+        else:
+            for member in el.findall(_xtce("MemberList") + "/" + _xtce("Member")):
+                ref = member.get("typeRef")
+                if not ref or ref not in valid_types:
+                    logger.error(
+                        "Struct '%s' member '%s' references undefined type '%s'",
+                        el.get("name"),
+                        member.get("name"),
+                        ref,
+                    )
+                    ok = False
 
     if ok:
         logger.info("Validation passed.")
