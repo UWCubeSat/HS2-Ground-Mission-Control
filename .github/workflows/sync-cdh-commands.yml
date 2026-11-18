@@ -4,7 +4,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
   sync-cdh:
@@ -60,3 +61,32 @@ jobs:
           name: hs2-cdh-xtce
           path: src/main/yamcs/commands/commands.xml
           if-no-files-found: error
+
+      - name: Create PR for generated CDH commands
+        # https://github.com/peter-evans/create-pull-request/tree/v7/
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: Sync generated CDH commands"
+          branch: automation/sync-cdh-commands
+          base: ${{ github.ref_name }}
+          delete-branch: true
+          add-paths: |
+            src/main/yamcs/commands/commands.xml
+          title: "chore: Sync generated CDH commands"
+          body: |
+            ## Summary
+            Automatically synchronize the generated F´ XTCE command definitions
+            from the HS2-CDH repository into HS2-Ground-Mission-Control.
+
+            ## Changes
+            - Generate commands.xml from the latest HS2-CDH dictionary.
+            - Validate the generated XTCE.
+            - Update src/main/yamcs/commands/commands.xml.
+
+            ## Validation
+            - F' dictionary generation and build completed.
+            - XTCE converter validation completed.
+            - XTCE validation script completed.
+
+            Generated automatically by the Sync CDH Commands workflow.
