@@ -41,6 +41,17 @@ def minimal_dict() -> dict:
 def full_dict() -> dict:
     return {
         "metadata": {"deploymentName": "FullMission"},
+        "typeDefinitions": [
+            {
+                "kind": "enum",
+                "qualifiedName": "Sys.Status",
+                "enumeration": [
+                    {"name": "IDLE", "value": 0},
+                    {"name": "ACTIVE", "value": 1},
+                    {"name": "ERROR", "value": 2},
+                ],
+            },
+        ],
         "commands": [
             {
                 "name": "sys.CMD_NO_OP",
@@ -87,11 +98,6 @@ def full_dict() -> dict:
                 "type": {
                     "kind": "qualifiedIdentifier",
                     "name": "Sys.Status",
-                    "enumeration": [
-                        {"name": "IDLE", "value": 0},
-                        {"name": "ACTIVE", "value": 1},
-                        {"name": "ERROR", "value": 2},
-                    ],
                 },
                 "telemetryUpdate": "ON_CHANGE",
                 "annotation": "System status",
@@ -199,6 +205,10 @@ def test_enum_values_in_xtce(full_dict: dict) -> None:
     root = build_xtce(d)
     enum_types = list(root.iter(_xtce("EnumeratedParameterType")))
     assert len(enum_types) >= 1
+    assert [child.tag for child in enum_types[0]] == [
+        _xtce("IntegerDataEncoding"),
+        _xtce("EnumerationList"),
+    ]
     enum_list = enum_types[0].find(_xtce("EnumerationList"))
     assert enum_list is not None
     labels = [e.get("label") for e in enum_list.findall(_xtce("Enumeration"))]
@@ -206,10 +216,20 @@ def test_enum_values_in_xtce(full_dict: dict) -> None:
 
 
 def test_command_enum_arg_type(full_dict: dict) -> None:
+    full_dict["commands"][1]["formalParams"].append(
+        {"name": "status", "type": {"kind": "qualifiedIdentifier", "name": "Sys.Status"}}
+    )
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
     enum_arg_types = list(root.iter(_xtce("EnumeratedArgumentType")))
-    assert isinstance(enum_arg_types, list)
+    assert [el.get("name") for el in enum_arg_types] == ["Arg_Enum_Sys_StatusType"]
+    assert [child.tag for child in enum_arg_types[0]] == [
+        _xtce("IntegerDataEncoding"),
+        _xtce("EnumerationList"),
+    ]
+    status_arg = root.find(f".//{_xtce('Argument')}[@name='status']")
+    assert status_arg is not None
+    assert status_arg.get("argumentTypeRef") == enum_arg_types[0].get("name")
 
 
 # ---------------------------------------------------------------------------
@@ -275,6 +295,9 @@ def test_xml_has_space_system_root(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
     assert root.tag == _xtce("SpaceSystem")
+    header = root.find(_xtce("Header"))
+    assert header is not None
+    assert header.get("validationStatus") == "Unknown"
 
 
 def test_xml_has_telemetry_meta(full_dict: dict) -> None:
@@ -304,6 +327,11 @@ def test_xml_metacommands_present(full_dict: dict) -> None:
 def test_xml_opcode_ancillary_data(full_dict: dict) -> None:
     d = parse_dictionary(full_dict)
     root = build_xtce(d)
+    for command in root.iter(_xtce("MetaCommand")):
+        tags = [child.tag for child in command]
+        assert tags.index(_xtce("AncillaryDataSet")) < tags.index(_xtce("CommandContainer"))
+        if _xtce("ArgumentList") in tags:
+            assert tags.index(_xtce("AncillaryDataSet")) < tags.index(_xtce("ArgumentList"))
     opcodes = [
         ad for ad in root.iter(_xtce("AncillaryData"))
         if ad.get("name") == "opcode"
@@ -312,6 +340,33 @@ def test_xml_opcode_ancillary_data(full_dict: dict) -> None:
     values = {int(ad.text) for ad in opcodes}
     assert 1 in values
     assert 2 in values
+
+
+@pytest.mark.parametrize(
+    ("index", "opcode", "expected_hex", "argument_names"),
+    [
+        (0, 1, "00000001", []),
+        (2, 0x89ABCDEF, "89ABCDEF", ["path", "flag"]),
+    ],
+)
+def test_xml_opcode_precedes_arguments(
+    full_dict: dict, index: int, opcode: int, expected_hex: str, argument_names: list[str]
+) -> None:
+    command = full_dict["commands"][index]
+    command["opcode"] = opcode
+    root = build_xtce(parse_dictionary(full_dict))
+    name = command["name"].replace(".", "_")
+    container = root.find(f".//{_xtce('CommandContainer')}[@name='{name}_CC']")
+    assert container is not None
+    entries = container.find(_xtce("EntryList"))
+    assert entries is not None
+    assert [entry.tag for entry in entries] == [
+        _xtce("FixedValueEntry"),
+        *[_xtce("ArgumentRefEntry") for _ in argument_names],
+    ]
+    assert entries[0].get("sizeInBits") == "32"
+    assert entries[0].get("binaryValue") == expected_hex
+    assert [entry.get("argumentRef") for entry in entries[1:]] == argument_names
 
 
 def test_no_duplicate_parameters(full_dict: dict) -> None:
@@ -388,7 +443,7 @@ def test_string_parameter_type_present() -> None:
     assert len(list(root.iter(_xtce("StringParameterType")))) >= 1
 
 
-def test_unknown_type_defaults_to_string() -> None:
+def test_unknown_type_is_rejected() -> None:
     data = {
         "metadata": {"deploymentName": "Unk"},
         "commands": [],
@@ -402,8 +457,8 @@ def test_unknown_type_defaults_to_string() -> None:
         ],
         "events": [],
     }
-    d = parse_dictionary(data)
-    assert d.telemetry[0].fprime_type.kind == "string"
+    with pytest.raises(ValueError, match="Unsupported type kind 'COMPLETELY_UNKNOWN_KIND' for ch.X"):
+        parse_dictionary(data)
 
 
 def test_write_xml_creates_parent_dirs(tmp_path: Path, minimal_dict: dict) -> None:

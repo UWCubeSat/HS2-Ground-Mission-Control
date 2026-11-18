@@ -20,12 +20,16 @@ from xml.etree import ElementTree as ET
 
 logger = logging.getLogger(__name__)
 
-XTCE_NS = "http://www.omg.org/space/xtce"
+XTCE_NAMESPACES = (
+    "http://www.omg.org/spec/XTCE/20180204",
+    "http://www.omg.org/space/xtce",
+)
 
 
-def _xtce(tag: str) -> str:
-    """Return a fully-qualified XTCE tag name."""
-    return f"{{{XTCE_NS}}}{tag}"
+def _xtce(root: ET.Element, tag: str) -> str:
+    """Qualify a tag with the same namespace as the document root."""
+    namespace, separator, _ = root.tag.rpartition("}")
+    return f"{namespace}{separator}{tag}"
 
 
 # ---------------------------------------------------------------------------
@@ -90,8 +94,7 @@ def check_well_formed(path: Path) -> tuple[bool, str, ET.Element | None]:
 
 def check_root_element(root: ET.Element) -> tuple[bool, str]:
     """Verify the root element is xtce:SpaceSystem."""
-    expected = _xtce("SpaceSystem")
-    if root.tag == expected:
+    if any(root.tag == f"{{{namespace}}}SpaceSystem" for namespace in XTCE_NAMESPACES):
         name = root.get("name", "<unnamed>")
         return True, f"Root is SpaceSystem name='{name}'."
     return False, f"Root element is <{root.tag}>, expected <xtce:SpaceSystem>."
@@ -116,7 +119,7 @@ def check_required_sections(root: ET.Element) -> list[ValidationResult]:
         for part in parts:
             if node is None:
                 break
-            node = node.find(_xtce(part))
+            node = node.find(_xtce(root, part))
 
         short = parts[-1]
         if node is not None:
@@ -133,7 +136,7 @@ def check_duplicate_parameters(root: ET.Element) -> tuple[bool, str]:
     """Detect duplicate parameter names in ParameterSet."""
     names: list[str] = [
         el.get("name", "")
-        for el in root.iter(_xtce("Parameter"))
+        for el in root.iter(_xtce(root, "Parameter"))
     ]
     seen: set[str] = set()
     duplicates: set[str] = set()
@@ -151,7 +154,7 @@ def check_duplicate_commands(root: ET.Element) -> tuple[bool, str]:
     """Detect duplicate MetaCommand names."""
     names: list[str] = [
         el.get("name", "")
-        for el in root.iter(_xtce("MetaCommand"))
+        for el in root.iter(_xtce(root, "MetaCommand"))
     ]
     seen: set[str] = set()
     duplicates: set[str] = set()
@@ -172,11 +175,11 @@ def check_parameter_refs(root: ET.Element) -> tuple[bool, str]:
     """
     defined: set[str] = {
         el.get("name", "")
-        for el in root.iter(_xtce("Parameter"))
+        for el in root.iter(_xtce(root, "Parameter"))
     }
     broken: list[str] = []
 
-    for ref_el in root.iter(_xtce("ParameterRefEntry")):
+    for ref_el in root.iter(_xtce(root, "ParameterRefEntry")):
         ref = ref_el.get("parameterRef", "")
         if ref and ref not in defined:
             broken.append(ref)
@@ -198,15 +201,17 @@ def check_type_refs(root: ET.Element) -> tuple[bool, str]:
         "StringParameterType",
         "EnumeratedParameterType",
         "BinaryParameterType",
+        "ArrayParameterType",
+        "AggregateParameterType",
     ]
     for tag in type_tags:
-        for el in root.iter(_xtce(tag)):
+        for el in root.iter(_xtce(root, tag)):
             name = el.get("name")
             if name:
                 defined_types.add(name)
 
     broken: list[str] = []
-    for param in root.iter(_xtce("Parameter")):
+    for param in root.iter(_xtce(root, "Parameter")):
         ref = param.get("parameterTypeRef", "")
         if ref and ref not in defined_types:
             broken.append(f"{param.get('name')} → {ref}")
@@ -225,15 +230,17 @@ def check_argument_type_refs(root: ET.Element) -> tuple[bool, str]:
         "EnumeratedArgumentType",
         "StringArgumentType",
         "BooleanArgumentType",
+        "ArrayArgumentType",
+        "AggregateArgumentType",
     ]
     for tag in arg_type_tags:
-        for el in root.iter(_xtce(tag)):
+        for el in root.iter(_xtce(root, tag)):
             name = el.get("name")
             if name:
                 defined_types.add(name)
 
     broken: list[str] = []
-    for arg in root.iter(_xtce("Argument")):
+    for arg in root.iter(_xtce(root, "Argument")):
         ref = arg.get("argumentTypeRef", "")
         if ref and ref not in defined_types:
             broken.append(f"{arg.get('name')} → {ref}")
@@ -245,9 +252,9 @@ def check_argument_type_refs(root: ET.Element) -> tuple[bool, str]:
 
 def check_counts(root: ET.Element) -> tuple[bool, str]:
     """Report counts of key elements as an informational check."""
-    params = list(root.iter(_xtce("Parameter")))
-    cmds = list(root.iter(_xtce("MetaCommand")))
-    containers = list(root.iter(_xtce("SequenceContainer")))
+    params = list(root.iter(_xtce(root, "Parameter")))
+    cmds = list(root.iter(_xtce(root, "MetaCommand")))
+    containers = list(root.iter(_xtce(root, "SequenceContainer")))
     msg = (
         f"{len(params)} parameters, {len(cmds)} commands, "
         f"{len(containers)} sequence containers."
