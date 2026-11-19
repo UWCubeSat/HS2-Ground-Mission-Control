@@ -64,6 +64,8 @@ mdb:
     spec: mdb/xtce.xml
   - type: xtce
     spec: mdb/hs2_mission.xml
+  - type: xtce
+    spec: commands/commands.xml
 
 # Configuration for streams created at server startup
 streamConfig:
