@@ -22,7 +22,6 @@ from main.python.fprime_to_xtce import (
     write_xml,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -246,7 +245,7 @@ def test_load_json_invalid(tmp_path: Path) -> None:
 def test_load_json_wrong_type(tmp_path: Path) -> None:
     p = tmp_path / "arr.json"
     p.write_text("[1, 2, 3]", encoding="utf-8")
-    with pytest.raises(ValueError, match="Top-level JSON value must be an object"):
+    with pytest.raises(TypeError, match="Top-level JSON value must be an object"):
         load_json(p)
 
 

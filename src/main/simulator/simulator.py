@@ -5,12 +5,11 @@ This is the old DEPRECATED simulator.py file.
 It has been replaced by the new simulator_mqtt.py file, which uses MQTT for telemetry and telecommand simulation.
 """
 
+import argparse
 import binascii
 import io
 import socket
 import sys
-import argparse
-
 from struct import unpack_from
 from threading import Thread
 from time import sleep
@@ -44,7 +43,7 @@ TC_RECEIVE_PORT    = args['tc_port']
 def send_tm(simulator):
     tm_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    with io.open(TEST_DATA, 'rb') as f:
+    with open(TEST_DATA, 'rb') as f:
         simulator.tm_counter = 1
         header = bytearray(6)
         while f.readinto(header) == 6:
@@ -69,7 +68,7 @@ def receive_tc(simulator):
         simulator.tc_counter += 1
 
 
-class Simulator():
+class Simulator:
 
     def __init__(self, rate):
         self.tm_counter = 0
@@ -91,8 +90,7 @@ class Simulator():
         cmdhex = None
         if self.last_tc:
             cmdhex = binascii.hexlify(self.last_tc).decode('ascii')
-        return 'Sent: {} packets. Received: {} commands. Last command: {}'.format(
-                         self.tm_counter, self.tc_counter, cmdhex)
+        return f'Sent: {self.tm_counter} packets. Received: {self.tc_counter} commands. Last command: {cmdhex}'
 
 
 if __name__ == '__main__':

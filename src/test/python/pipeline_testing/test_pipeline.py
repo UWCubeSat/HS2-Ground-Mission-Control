@@ -15,22 +15,8 @@ import struct
 import threading
 import time
 from pathlib import Path
-from xml.etree import ElementTree as ET
 
 import pytest
-
-from main.python.validate_xtce import (
-    ValidationReport,
-    check_argument_type_refs,
-    check_counts,
-    check_duplicate_commands,
-    check_duplicate_parameters,
-    check_parameter_refs,
-    check_root_element,
-    check_type_refs,
-    check_well_formed,
-    validate,
-)
 from test_simulator import (
     PACKET_FORMAT,
     PACKET_SIZE,
@@ -42,6 +28,17 @@ from test_simulator import (
     generate_temperature,
     generate_voltage,
     run_simulator,
+)
+
+from main.python.validate_xtce import (
+    check_counts,
+    check_duplicate_commands,
+    check_duplicate_parameters,
+    check_parameter_refs,
+    check_root_element,
+    check_type_refs,
+    check_well_formed,
+    validate,
 )
 
 # ---------------------------------------------------------------------------
@@ -116,7 +113,7 @@ VALID_XTCE = """\
 class TestWellFormedXML:
     def test_valid_xml_is_well_formed(self, tmp_path: Path) -> None:
         p = _write_xml(tmp_path, VALID_XTCE)
-        ok, msg, root = check_well_formed(p)
+        ok, _msg, root = check_well_formed(p)
         assert ok is True
         assert root is not None
 
@@ -129,12 +126,12 @@ class TestWellFormedXML:
 
     def test_empty_file_fails(self, tmp_path: Path) -> None:
         p = _write_xml(tmp_path, "")
-        ok, msg, root = check_well_formed(p)
+        ok, _msg, _root = check_well_formed(p)
         assert ok is False
 
     def test_non_xml_content_fails(self, tmp_path: Path) -> None:
         p = _write_xml(tmp_path, "this is not xml at all !!!")
-        ok, msg, root = check_well_formed(p)
+        ok, _msg, _root = check_well_formed(p)
         assert ok is False
 
 
@@ -150,7 +147,7 @@ class TestRootElement:
         xml = '<root xmlns:xtce="http://www.omg.org/space/xtce"><child/></root>'
         p = _write_xml(tmp_path, xml)
         _, _, root = check_well_formed(p)
-        ok, msg = check_root_element(root)
+        ok, _msg = check_root_element(root)
         assert ok is False
 
 
@@ -227,7 +224,7 @@ class TestDuplicateParameters:
     def test_no_duplicates_in_valid_xtce(self, tmp_path: Path) -> None:
         p = _write_xml(tmp_path, VALID_XTCE)
         _, _, root = check_well_formed(p)
-        ok, msg = check_duplicate_parameters(root)
+        ok, _msg = check_duplicate_parameters(root)
         assert ok is True
 
     def test_duplicate_parameter_detected(self, tmp_path: Path) -> None:
@@ -291,7 +288,7 @@ class TestParameterRefs:
     def test_valid_refs_pass(self, tmp_path: Path) -> None:
         p = _write_xml(tmp_path, VALID_XTCE)
         _, _, root = check_well_formed(p)
-        ok, msg = check_parameter_refs(root)
+        ok, _msg = check_parameter_refs(root)
         assert ok is True
 
     def test_broken_ref_detected(self, tmp_path: Path) -> None:
@@ -330,7 +327,7 @@ class TestParameterRefs:
     def test_type_ref_validation(self, tmp_path: Path) -> None:
         p = _write_xml(tmp_path, VALID_XTCE)
         _, _, root = check_well_formed(p)
-        ok, msg = check_type_refs(root)
+        ok, _msg = check_type_refs(root)
         assert ok is True
 
     def test_broken_type_ref_detected(self, tmp_path: Path) -> None:
@@ -509,7 +506,7 @@ class TestUDPTransmission:
                 while len(received) < 3:
                     data, _ = sock.recvfrom(1024)
                     received.append(data)
-            except socket.timeout:
+            except TimeoutError:
                 pass
             finally:
                 sock.close()
@@ -546,7 +543,7 @@ class TestUDPTransmission:
                 while len(received) < 5:
                     data, _ = sock.recvfrom(1024)
                     received.append(data)
-            except socket.timeout:
+            except TimeoutError:
                 pass
             finally:
                 sock.close()
