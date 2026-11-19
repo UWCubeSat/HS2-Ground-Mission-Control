@@ -2,6 +2,9 @@ name: Sync CDH Commands
 
 on:
   workflow_dispatch:
+  schedule: 
+    - cron: '0 8 * * *'
+      timezone: 'America/Los_Angeles'
 
 permissions:
   contents: write
@@ -69,7 +72,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: Sync generated CDH commands"
           branch: automation/sync-cdh-commands
-          base: ${{ github.ref_name }}
+          base: ${{ github.event.repository.default_branch }}
           delete-branch: true
           add-paths: |
             src/main/yamcs/commands/commands.xml
