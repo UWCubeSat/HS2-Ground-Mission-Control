@@ -94,7 +94,7 @@ class TelemetryPacket:
         )
 
     @classmethod
-    def decode(cls, data: bytes) -> "TelemetryPacket":
+    def decode(cls, data: bytes) -> TelemetryPacket:
         """
         Unpack a raw byte buffer back into a TelemetryPacket.
 
@@ -104,7 +104,7 @@ class TelemetryPacket:
             raise ValueError(
                 f"Expected {PACKET_SIZE} bytes, got {len(data)}"
             )
-        w0, w1, _w2, packet_id, temperature, voltage, status = struct.unpack(
+        _w0, w1, _w2, packet_id, temperature, voltage, status = struct.unpack(
             PACKET_FORMAT, data
         )
         sequence = w1 & 0x3FFF
