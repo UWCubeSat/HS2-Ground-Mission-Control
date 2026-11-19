@@ -1,5 +1,6 @@
 #this script takes commands ON and OFF
 import sys
+
 from yamcs.client import YamcsClient
 
 state = sys.argv[1].upper() if len(sys.argv) > 1 else "ON"

@@ -70,10 +70,10 @@ class TelemetryPacket:
         )
 
     @classmethod
-    def decode(cls, data: bytes) -> "TelemetryPacket":
+    def decode(cls, data: bytes) -> TelemetryPacket:
         if len(data) != PACKET_SIZE:
             raise ValueError(f"Expected {PACKET_SIZE} bytes, got {len(data)}")
-        w0, w1, _w2, packet_id, temperature, voltage, status = struct.unpack(
+        _w0, w1, _w2, packet_id, temperature, voltage, status = struct.unpack(
             PACKET_FORMAT, data
         )
         sequence = w1 & 0x3FFF
@@ -169,7 +169,7 @@ def run_simulator(
             )
             try:
                 publish_packet(client, topic, packet, qos=qos)
-            except Exception as exc:
+            except mqtt.MQTTException as exc:
                 logger.error("Failed to publish packet %d: %s", tick, exc)
 
             tick += 1

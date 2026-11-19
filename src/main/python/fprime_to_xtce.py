@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 fprime_to_xtce.py
 
@@ -133,7 +132,7 @@ def load_json(path: Path) -> dict[str, Any]:
     except json.JSONDecodeError as exc:
         raise ValueError(f"Invalid JSON in {path}: {exc}") from exc
     if not isinstance(data, dict):
-        raise ValueError("Top-level JSON value must be an object.")
+        raise TypeError("Top-level JSON value must be an object.")
     return data
 
 
@@ -149,13 +148,13 @@ def _parse_enum_values(type_obj: dict[str, Any]) -> list[EnumValue]:
     )
 
     if not isinstance(items, list):
-        raise ValueError("Enum constants must be a list")
+        raise TypeError("Enum constants must be a list")
 
     values = []
 
     for item in items:
         if not isinstance(item, dict):
-            raise ValueError(
+            raise TypeError(
                 f"Invalid enum constant: {item!r}"
             )
 
@@ -174,7 +173,7 @@ def _parse_enum_values(type_obj: dict[str, Any]) -> list[EnumValue]:
 def _parse_type(type_obj: dict[str, Any] | None, context: str = "", type_definitions: dict[str, Any] | None = None, resolving: frozenset[str] = frozenset(),) -> FPrimeType:
 
     if not isinstance(type_obj, dict):
-        raise ValueError(f"Missing or invalid type for {context}")
+        raise TypeError(f"Missing or invalid type for {context}")
 
     kind = type_obj.get("kind", "")
     name = type_obj.get("name", type_obj.get("qualifiedName", ""))
@@ -1063,8 +1062,8 @@ def main(argv: list[str] | None = None) -> int:
     except RuntimeError as exc:
         logger.error("Runtime error: %s", exc)
         return 4
-    except Exception as exc:
-        logger.exception("Unexpected error: %s", exc)
+    except Exception:
+        logger.exception("Unexpected error")
         return 99
 
     logger.info("Done.")
