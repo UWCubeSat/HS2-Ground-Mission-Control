@@ -17,5 +17,6 @@ docker/all.log
 *.py[codz]
 *$py.class
 
+**/.ruff_cache
 # Python virtual environments
 venv/
