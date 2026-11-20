@@ -16,3 +16,5 @@ docker/all.log
 **/__pycache__/
 *.py[codz]
 *$py.class
+
+**/.ruff_cache

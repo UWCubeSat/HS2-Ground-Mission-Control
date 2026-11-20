@@ -4,10 +4,11 @@ skyfield_valid.py
 Methods for valid downlink streaming to YAMCS
 """
 
+import os
+import time
+
 from skyfield.api import EarthSatellite, Loader, load, wgs84
 from skyfield.timelib import Time, Timescale
-import time
-import os
 
 TLE_URL = 'https://celestrak.org/NORAD/elements/gp.php?CATNR=900&FORMAT=tle' # redownload to get up-to-date TLE
 DATA_DIR = './skyfield-data'
@@ -105,7 +106,7 @@ def up_now_fast(satilette: EarthSatellite, locations: list, ts: Timescale, t0: T
     for _, site in locations:
         difference = satilette - site
         topocentric = difference.at(t0)
-        alt, az, distance = topocentric.altaz()
+        alt, _, _ = topocentric.altaz()
         if alt.degrees >= DEFAULT_ELEVATION_THRESHOLD:
             return True
     return False
