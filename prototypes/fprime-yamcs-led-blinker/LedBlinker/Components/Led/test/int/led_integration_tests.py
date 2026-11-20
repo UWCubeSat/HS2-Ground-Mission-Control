@@ -33,8 +33,7 @@ def test_blinking(fprime_test_api):
     ascending = True
     prev = None
     for res in results:
-        if prev is not None:
-            if not res.get_val() > prev.get_val():
+        if prev is not None and res.get_val() <= prev.get_val():
                 ascending = False
                 fprime_test_api.log(
                     f"LedBlinker.led.LedTransitionCount not in ascending order: First ({prev.get_val()}) Second ({res.get_val()})"
