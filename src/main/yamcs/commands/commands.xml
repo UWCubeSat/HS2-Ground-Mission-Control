@@ -106,9 +106,9 @@
         <StringDataEncoding encoding="UTF-8">
           <SizeInBits>
             <Fixed>
-              <FixedValue>1984</FixedValue>
+              <FixedValue>1936</FixedValue>
             </Fixed>
-            <LeadingSize sizeInBitsOfSizeTag="64" />
+            <LeadingSize sizeInBitsOfSizeTag="16" />
           </SizeInBits>
         </StringDataEncoding>
       </StringParameterType>
@@ -116,9 +116,9 @@
         <StringDataEncoding encoding="UTF-8">
           <SizeInBits>
             <Fixed>
-              <FixedValue>704</FixedValue>
+              <FixedValue>656</FixedValue>
             </Fixed>
-            <LeadingSize sizeInBitsOfSizeTag="64" />
+            <LeadingSize sizeInBitsOfSizeTag="16" />
           </SizeInBits>
         </StringDataEncoding>
       </StringParameterType>
@@ -144,7 +144,7 @@
         </EnumerationList>
       </EnumeratedParameterType>
       <IntegerParameterType name="FwSizeType" shortDescription="The unsigned type of larger sizes internal to the software,&#10;e.g., memory buffer sizes, file sizes. Must be unsigned." baseType="PlatformSizeType" signed="false" sizeInBits="64" />
-      <IntegerParameterType name="FwSizeStoreType" shortDescription="The type used to serialize a size value. WARNING: must be kept in sync with FwSizeType;&#10;framework components assume any in-memory size can be serialized without truncation." baseType="FwSizeType" signed="false" sizeInBits="64" />
+      <IntegerParameterType name="FwSizeStoreType" shortDescription="The type used to serialize a size value" baseType="U16" signed="false" sizeInBits="16" />
       <IntegerParameterType name="FwPacketDescriptorType" shortDescription="The width of packet descriptors when they are serialized by the framework" baseType="U16" signed="false" sizeInBits="16" />
       <IntegerParameterType name="FwTimeBaseStoreType" shortDescription="The type used to serialize a time base value" baseType="U16" signed="false" sizeInBits="16" />
       <IntegerParameterType name="FwEventIdType" shortDescription="The type of an event identifier" baseType="FwIdType" signed="false" sizeInBits="32" />
@@ -152,9 +152,9 @@
         <StringDataEncoding encoding="UTF-8">
           <SizeInBits>
             <Fixed>
-              <FixedValue>384</FixedValue>
+              <FixedValue>336</FixedValue>
             </Fixed>
-            <LeadingSize sizeInBitsOfSizeTag="64" />
+            <LeadingSize sizeInBitsOfSizeTag="16" />
           </SizeInBits>
         </StringDataEncoding>
       </StringParameterType>
@@ -162,9 +162,9 @@
         <StringDataEncoding encoding="UTF-8">
           <SizeInBits>
             <Fixed>
-              <FixedValue>864</FixedValue>
+              <FixedValue>816</FixedValue>
             </Fixed>
-            <LeadingSize sizeInBitsOfSizeTag="64" />
+            <LeadingSize sizeInBitsOfSizeTag="16" />
           </SizeInBits>
         </StringDataEncoding>
       </StringParameterType>
@@ -172,9 +172,9 @@
         <StringDataEncoding encoding="UTF-8">
           <SizeInBits>
             <Fixed>
-              <FixedValue>1344</FixedValue>
+              <FixedValue>1296</FixedValue>
             </Fixed>
-            <LeadingSize sizeInBitsOfSizeTag="64" />
+            <LeadingSize sizeInBitsOfSizeTag="16" />
           </SizeInBits>
         </StringDataEncoding>
       </StringParameterType>
@@ -182,9 +182,9 @@
         <StringDataEncoding encoding="UTF-8">
           <SizeInBits>
             <Fixed>
-              <FixedValue>2112</FixedValue>
+              <FixedValue>2064</FixedValue>
             </Fixed>
-            <LeadingSize sizeInBitsOfSizeTag="64" />
+            <LeadingSize sizeInBitsOfSizeTag="16" />
           </SizeInBits>
         </StringDataEncoding>
       </StringParameterType>
@@ -192,9 +192,9 @@
         <StringDataEncoding encoding="UTF-8">
           <SizeInBits>
             <Fixed>
-              <FixedValue>544</FixedValue>
+              <FixedValue>496</FixedValue>
             </Fixed>
-            <LeadingSize sizeInBitsOfSizeTag="64" />
+            <LeadingSize sizeInBitsOfSizeTag="16" />
           </SizeInBits>
         </StringDataEncoding>
       </StringParameterType>
@@ -764,21 +764,21 @@
       </IntegerArgumentType>
       <StringArgumentType name="string240">
         <StringDataEncoding encoding="UTF-8">
-          <Variable maxSizeInBits="1984">
+          <Variable maxSizeInBits="1936">
             <DynamicValue>
               <ParameterInstanceRef parameterRef="_yamcs_ignore" />
             </DynamicValue>
-            <LeadingSize sizeInBitsOfSizeTag="64" />
+            <LeadingSize sizeInBitsOfSizeTag="16" />
           </Variable>
         </StringDataEncoding>
       </StringArgumentType>
       <StringArgumentType name="string80">
         <StringDataEncoding encoding="UTF-8">
-          <Variable maxSizeInBits="704">
+          <Variable maxSizeInBits="656">
             <DynamicValue>
               <ParameterInstanceRef parameterRef="_yamcs_ignore" />
             </DynamicValue>
-            <LeadingSize sizeInBitsOfSizeTag="64" />
+            <LeadingSize sizeInBitsOfSizeTag="16" />
           </Variable>
         </StringDataEncoding>
       </StringArgumentType>
@@ -804,47 +804,47 @@
         </EnumerationList>
       </EnumeratedArgumentType>
       <IntegerArgumentType name="FwSizeType" shortDescription="The unsigned type of larger sizes internal to the software,&#10;e.g., memory buffer sizes, file sizes. Must be unsigned." baseType="PlatformSizeType" signed="false" sizeInBits="64" />
-      <IntegerArgumentType name="FwSizeStoreType" shortDescription="The type used to serialize a size value. WARNING: must be kept in sync with FwSizeType;&#10;framework components assume any in-memory size can be serialized without truncation." baseType="FwSizeType" signed="false" sizeInBits="64" />
+      <IntegerArgumentType name="FwSizeStoreType" shortDescription="The type used to serialize a size value" baseType="U16" signed="false" sizeInBits="16" />
       <IntegerArgumentType name="FwPacketDescriptorType" shortDescription="The width of packet descriptors when they are serialized by the framework" baseType="U16" signed="false" sizeInBits="16" />
       <IntegerArgumentType name="FwTimeBaseStoreType" shortDescription="The type used to serialize a time base value" baseType="U16" signed="false" sizeInBits="16" />
       <IntegerArgumentType name="FwEventIdType" shortDescription="The type of an event identifier" baseType="FwIdType" signed="false" sizeInBits="32" />
       <StringArgumentType name="string100">
         <StringDataEncoding encoding="UTF-8">
-          <Variable maxSizeInBits="864">
+          <Variable maxSizeInBits="816">
             <DynamicValue>
               <ParameterInstanceRef parameterRef="_yamcs_ignore" />
             </DynamicValue>
-            <LeadingSize sizeInBitsOfSizeTag="64" />
+            <LeadingSize sizeInBitsOfSizeTag="16" />
           </Variable>
         </StringDataEncoding>
       </StringArgumentType>
       <StringArgumentType name="string16">
         <StringDataEncoding encoding="UTF-8">
-          <Variable maxSizeInBits="192">
+          <Variable maxSizeInBits="144">
             <DynamicValue>
               <ParameterInstanceRef parameterRef="_yamcs_ignore" />
             </DynamicValue>
-            <LeadingSize sizeInBitsOfSizeTag="64" />
+            <LeadingSize sizeInBitsOfSizeTag="16" />
           </Variable>
         </StringDataEncoding>
       </StringArgumentType>
       <StringArgumentType name="string160">
         <StringDataEncoding encoding="UTF-8">
-          <Variable maxSizeInBits="1344">
+          <Variable maxSizeInBits="1296">
             <DynamicValue>
               <ParameterInstanceRef parameterRef="_yamcs_ignore" />
             </DynamicValue>
-            <LeadingSize sizeInBitsOfSizeTag="64" />
+            <LeadingSize sizeInBitsOfSizeTag="16" />
           </Variable>
         </StringDataEncoding>
       </StringArgumentType>
       <StringArgumentType name="string40">
         <StringDataEncoding encoding="UTF-8">
-          <Variable maxSizeInBits="384">
+          <Variable maxSizeInBits="336">
             <DynamicValue>
               <ParameterInstanceRef parameterRef="_yamcs_ignore" />
             </DynamicValue>
-            <LeadingSize sizeInBitsOfSizeTag="64" />
+            <LeadingSize sizeInBitsOfSizeTag="16" />
           </Variable>
         </StringDataEncoding>
       </StringArgumentType>
@@ -3527,19 +3527,6 @@
             <Member name="useconds" shortDescription="microseconds portion of TimeInterval" typeRef="/FlightComputer_FlightComputer/U32" />
           </MemberList>
         </AggregateParameterType>
-        <EnumeratedParameterType name="CmdResponse" shortDescription="Enum representing a command response">
-          <IntegerDataEncoding sizeInBits="8" encoding="unsigned" byteOrder="mostSignificantByteFirst" />
-          <EnumerationList>
-            <Enumeration shortDescription="Command successfully executed" value="0" label="OK" />
-            <Enumeration shortDescription="Invalid opcode dispatched" value="1" label="INVALID_OPCODE" />
-            <Enumeration shortDescription="Command failed validation" value="2" label="VALIDATION_ERROR" />
-            <Enumeration shortDescription="Command failed to deserialize" value="3" label="FORMAT_ERROR" />
-            <Enumeration shortDescription="Command had execution error" value="4" label="EXECUTION_ERROR" />
-            <Enumeration shortDescription="Component busy" value="5" label="BUSY" />
-            <Enumeration shortDescription="Command tracking was cleared before the command completed" value="6" label="CLEARED" />
-            <Enumeration shortDescription="Command was dispatched but the response tracking failed, indicating unknown state" value="7" label="DISPATCHED_UNTRACKED" />
-          </EnumerationList>
-        </EnumeratedParameterType>
         <EnumeratedParameterType name="DpState">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned" byteOrder="mostSignificantByteFirst" />
           <EnumerationList>
@@ -3565,6 +3552,17 @@
             <Enumeration value="0" label="EQ" />
             <Enumeration value="1" label="GT" />
             <Enumeration value="2" label="INCOMPARABLE" />
+          </EnumerationList>
+        </EnumeratedParameterType>
+        <EnumeratedParameterType name="CmdResponse" shortDescription="Enum representing a command response">
+          <IntegerDataEncoding sizeInBits="8" encoding="unsigned" byteOrder="mostSignificantByteFirst" />
+          <EnumerationList>
+            <Enumeration shortDescription="Command successfully executed" value="0" label="OK" />
+            <Enumeration shortDescription="Invalid opcode dispatched" value="1" label="INVALID_OPCODE" />
+            <Enumeration shortDescription="Command failed validation" value="2" label="VALIDATION_ERROR" />
+            <Enumeration shortDescription="Command failed to deserialize" value="3" label="FORMAT_ERROR" />
+            <Enumeration shortDescription="Command had execution error" value="4" label="EXECUTION_ERROR" />
+            <Enumeration shortDescription="Component busy" value="5" label="BUSY" />
           </EnumerationList>
         </EnumeratedParameterType>
         <EnumeratedParameterType name="DeserialStatus" shortDescription="Deserialization status">
@@ -3621,19 +3619,6 @@
             <Member name="useconds" shortDescription="microseconds portion of TimeInterval" typeRef="/FlightComputer_FlightComputer/U32" />
           </MemberList>
         </AggregateArgumentType>
-        <EnumeratedArgumentType name="CmdResponse" shortDescription="Enum representing a command response">
-          <IntegerDataEncoding sizeInBits="8" encoding="unsigned" byteOrder="mostSignificantByteFirst" />
-          <EnumerationList>
-            <Enumeration shortDescription="Command successfully executed" value="0" label="OK" />
-            <Enumeration shortDescription="Invalid opcode dispatched" value="1" label="INVALID_OPCODE" />
-            <Enumeration shortDescription="Command failed validation" value="2" label="VALIDATION_ERROR" />
-            <Enumeration shortDescription="Command failed to deserialize" value="3" label="FORMAT_ERROR" />
-            <Enumeration shortDescription="Command had execution error" value="4" label="EXECUTION_ERROR" />
-            <Enumeration shortDescription="Component busy" value="5" label="BUSY" />
-            <Enumeration shortDescription="Command tracking was cleared before the command completed" value="6" label="CLEARED" />
-            <Enumeration shortDescription="Command was dispatched but the response tracking failed, indicating unknown state" value="7" label="DISPATCHED_UNTRACKED" />
-          </EnumerationList>
-        </EnumeratedArgumentType>
         <EnumeratedArgumentType name="DpState">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned" byteOrder="mostSignificantByteFirst" />
           <EnumerationList>
@@ -3659,6 +3644,17 @@
             <Enumeration value="0" label="EQ" />
             <Enumeration value="1" label="GT" />
             <Enumeration value="2" label="INCOMPARABLE" />
+          </EnumerationList>
+        </EnumeratedArgumentType>
+        <EnumeratedArgumentType name="CmdResponse" shortDescription="Enum representing a command response">
+          <IntegerDataEncoding sizeInBits="8" encoding="unsigned" byteOrder="mostSignificantByteFirst" />
+          <EnumerationList>
+            <Enumeration shortDescription="Command successfully executed" value="0" label="OK" />
+            <Enumeration shortDescription="Invalid opcode dispatched" value="1" label="INVALID_OPCODE" />
+            <Enumeration shortDescription="Command failed validation" value="2" label="VALIDATION_ERROR" />
+            <Enumeration shortDescription="Command failed to deserialize" value="3" label="FORMAT_ERROR" />
+            <Enumeration shortDescription="Command had execution error" value="4" label="EXECUTION_ERROR" />
+            <Enumeration shortDescription="Component busy" value="5" label="BUSY" />
           </EnumerationList>
         </EnumeratedArgumentType>
         <EnumeratedArgumentType name="DeserialStatus" shortDescription="Deserialization status">
@@ -4474,6 +4470,15 @@
     <SpaceSystem name="TlmPacketizer">
       <TelemetryMetaData>
         <ParameterTypeSet>
+          <AggregateParameterType name="GroupConfig">
+            <MemberList>
+              <Member name="enabled" shortDescription="Enable / Disable Telemetry Output" typeRef="/FlightComputer_FlightComputer/Fw/Enabled" />
+              <Member name="forceEnabled" shortDescription="Force Enable / Disable Telemetry Output" typeRef="/FlightComputer_FlightComputer/Fw/Enabled" />
+              <Member name="rateLogic" shortDescription="Rate Logic Configuration" typeRef="/FlightComputer_FlightComputer/Svc/RateLogic" />
+              <Member name="min" shortDescription="Minimum Sched Ticks when in ON_CHANGE_MIN" typeRef="/FlightComputer_FlightComputer/U32" />
+              <Member name="max" shortDescription="Maximum Sched Ticks when in EVERY_MAX" typeRef="/FlightComputer_FlightComputer/U32" />
+            </MemberList>
+          </AggregateParameterType>
           <ArrayParameterType name="GroupConfigs" arrayTypeRef="/FlightComputer_FlightComputer/Svc/TlmPacketizer/GroupConfig">
             <DimensionList>
               <Dimension>
@@ -4486,15 +4491,6 @@
               </Dimension>
             </DimensionList>
           </ArrayParameterType>
-          <AggregateParameterType name="GroupConfig">
-            <MemberList>
-              <Member name="enabled" shortDescription="Enable / Disable Telemetry Output" typeRef="/FlightComputer_FlightComputer/Fw/Enabled" />
-              <Member name="forceEnabled" shortDescription="Force Enable / Disable Telemetry Output" typeRef="/FlightComputer_FlightComputer/Fw/Enabled" />
-              <Member name="rateLogic" shortDescription="Rate Logic Configuration" typeRef="/FlightComputer_FlightComputer/Svc/RateLogic" />
-              <Member name="min" shortDescription="Minimum Sched Ticks when in ON_CHANGE_MIN" typeRef="/FlightComputer_FlightComputer/U32" />
-              <Member name="max" shortDescription="Maximum Sched Ticks when in EVERY_MAX" typeRef="/FlightComputer_FlightComputer/U32" />
-            </MemberList>
-          </AggregateParameterType>
           <ArrayParameterType name="SectionConfigs" arrayTypeRef="/FlightComputer_FlightComputer/Svc/TlmPacketizer/GroupConfigs">
             <DimensionList>
               <Dimension>
@@ -4523,6 +4519,15 @@
       </TelemetryMetaData>
       <CommandMetaData>
         <ArgumentTypeSet>
+          <AggregateArgumentType name="GroupConfig">
+            <MemberList>
+              <Member name="enabled" shortDescription="Enable / Disable Telemetry Output" typeRef="/FlightComputer_FlightComputer/Fw/Enabled" />
+              <Member name="forceEnabled" shortDescription="Force Enable / Disable Telemetry Output" typeRef="/FlightComputer_FlightComputer/Fw/Enabled" />
+              <Member name="rateLogic" shortDescription="Rate Logic Configuration" typeRef="/FlightComputer_FlightComputer/Svc/RateLogic" />
+              <Member name="min" shortDescription="Minimum Sched Ticks when in ON_CHANGE_MIN" typeRef="/FlightComputer_FlightComputer/U32" />
+              <Member name="max" shortDescription="Maximum Sched Ticks when in EVERY_MAX" typeRef="/FlightComputer_FlightComputer/U32" />
+            </MemberList>
+          </AggregateArgumentType>
           <ArrayArgumentType name="GroupConfigs" arrayTypeRef="/FlightComputer_FlightComputer/Svc/TlmPacketizer/GroupConfig">
             <DimensionList>
               <Dimension>
@@ -4535,15 +4540,6 @@
               </Dimension>
             </DimensionList>
           </ArrayArgumentType>
-          <AggregateArgumentType name="GroupConfig">
-            <MemberList>
-              <Member name="enabled" shortDescription="Enable / Disable Telemetry Output" typeRef="/FlightComputer_FlightComputer/Fw/Enabled" />
-              <Member name="forceEnabled" shortDescription="Force Enable / Disable Telemetry Output" typeRef="/FlightComputer_FlightComputer/Fw/Enabled" />
-              <Member name="rateLogic" shortDescription="Rate Logic Configuration" typeRef="/FlightComputer_FlightComputer/Svc/RateLogic" />
-              <Member name="min" shortDescription="Minimum Sched Ticks when in ON_CHANGE_MIN" typeRef="/FlightComputer_FlightComputer/U32" />
-              <Member name="max" shortDescription="Maximum Sched Ticks when in EVERY_MAX" typeRef="/FlightComputer_FlightComputer/U32" />
-            </MemberList>
-          </AggregateArgumentType>
           <ArrayArgumentType name="SectionConfigs" arrayTypeRef="/FlightComputer_FlightComputer/Svc/TlmPacketizer/GroupConfigs">
             <DimensionList>
               <Dimension>
