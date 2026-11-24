@@ -35,7 +35,7 @@ This will also delete Yamcs data. Change the `dataDir` property in `yamcs.yaml` 
 
 ## Running Mosquitto (MQTT broker)
 
-Yamcs exchanges packets over MQTT (`fprime` link: telemetry on `fprime-tm`, commands on `fprime-tc`; `simulator` link: telemetry on `yamcs-tm`; see `yamcs.myproject.yaml`), so start the local broker on port 1883 before running Yamcs or `tools/pipeline_testing/MQTT_simulator.py`: `cd mosquitto && docker compose up -d` (stop it with `docker compose down`, view logs with `docker compose logs -f`).
+Yamcs exchanges packets over MQTT (`fprime` link: telemetry on `fprime-tm`, commands on `fprime-tc`; `hs2-sim` link: hs2-sim telemetry on `hs2-sim-tm`; `simulator` link: telemetry on `yamcs-tm`; see `yamcs.myproject.yaml`), so start the local broker on port 1883 before running Yamcs or `tools/pipeline_testing/MQTT_simulator.py`: `cd mosquitto && docker compose up -d` (stop it with `docker compose down`, view logs with `docker compose logs -f`).
 
 
 ## Telemetry
