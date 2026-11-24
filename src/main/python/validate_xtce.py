@@ -31,6 +31,49 @@ def _xtce(root: ET.Element, tag: str) -> str:
     return f"{namespace}{separator}{tag}"
 
 
+def _space_systems(root: ET.Element) -> list[tuple[str, ET.Element]]:
+    """Return (qualified path, element) for the root and every nested SpaceSystem."""
+    found: list[tuple[str, ET.Element]] = []
+
+    def walk(system: ET.Element, parent: str) -> None:
+        path = f"{parent}/{system.get('name', '')}"
+        found.append((path, system))
+        for child in system.findall(_xtce(root, "SpaceSystem")):
+            walk(child, path)
+
+    walk(root, "")
+    return found
+
+
+def _scoped(root: ET.Element, *tags: str) -> list[tuple[str, ET.Element]]:
+    """Return (SpaceSystem path, element) for each matching element."""
+    wanted = {_xtce(root, tag) for tag in tags}
+    sections = {_xtce(root, "TelemetryMetaData"), _xtce(root, "CommandMetaData")}
+    return [
+        (path, el)
+        for path, system in _space_systems(root)
+        for section in system
+        if section.tag in sections
+        for el in section.iter()
+        if el.tag in wanted
+    ]
+
+
+def _qualified_names(root: ET.Element, *tags: str) -> list[str]:
+    return [f"{path}/{el.get('name', '')}" for path, el in _scoped(root, *tags)]
+
+
+def _resolves(ref: str, scope: str, defined: set[str]) -> bool:
+    """Resolve an absolute reference, or a relative one from scope upwards."""
+    if ref.startswith("/"):
+        return ref in defined
+    while scope:
+        if f"{scope}/{ref}" in defined:
+            return True
+        scope = scope.rpartition("/")[0]
+    return False
+
+
 # ---------------------------------------------------------------------------
 # Result types
 # ---------------------------------------------------------------------------
@@ -133,10 +176,7 @@ def check_required_sections(root: ET.Element) -> list[ValidationResult]:
 
 def check_duplicate_parameters(root: ET.Element) -> tuple[bool, str]:
     """Detect duplicate parameter names in ParameterSet."""
-    names: list[str] = [
-        el.get("name", "")
-        for el in root.iter(_xtce(root, "Parameter"))
-    ]
+    names = _qualified_names(root, "Parameter")
     seen: set[str] = set()
     duplicates: set[str] = set()
     for n in names:
@@ -151,10 +191,7 @@ def check_duplicate_parameters(root: ET.Element) -> tuple[bool, str]:
 
 def check_duplicate_commands(root: ET.Element) -> tuple[bool, str]:
     """Detect duplicate MetaCommand names."""
-    names: list[str] = [
-        el.get("name", "")
-        for el in root.iter(_xtce(root, "MetaCommand"))
-    ]
+    names = _qualified_names(root, "MetaCommand")
     seen: set[str] = set()
     duplicates: set[str] = set()
     for n in names:
@@ -172,15 +209,12 @@ def check_parameter_refs(root: ET.Element) -> tuple[bool, str]:
     Verify every parameterRef inside a SequenceContainer/EntryList
     points to a defined Parameter.
     """
-    defined: set[str] = {
-        el.get("name", "")
-        for el in root.iter(_xtce(root, "Parameter"))
-    }
+    defined = set(_qualified_names(root, "Parameter"))
     broken: list[str] = []
 
-    for ref_el in root.iter(_xtce(root, "ParameterRefEntry")):
+    for scope, ref_el in _scoped(root, "ParameterRefEntry"):
         ref = ref_el.get("parameterRef", "")
-        if ref and ref not in defined:
+        if ref and not _resolves(ref, scope, defined):
             broken.append(ref)
 
     if not broken:
@@ -203,16 +237,12 @@ def check_type_refs(root: ET.Element) -> tuple[bool, str]:
         "ArrayParameterType",
         "AggregateParameterType",
     ]
-    for tag in type_tags:
-        for el in root.iter(_xtce(root, tag)):
-            name = el.get("name")
-            if name:
-                defined_types.add(name)
+    defined_types.update(_qualified_names(root, *type_tags))
 
     broken: list[str] = []
-    for param in root.iter(_xtce(root, "Parameter")):
+    for scope, param in _scoped(root, "Parameter"):
         ref = param.get("parameterTypeRef", "")
-        if ref and ref not in defined_types:
+        if ref and not _resolves(ref, scope, defined_types):
             broken.append(f"{param.get('name')} → {ref}")
 
     if not broken:
@@ -232,16 +262,12 @@ def check_argument_type_refs(root: ET.Element) -> tuple[bool, str]:
         "ArrayArgumentType",
         "AggregateArgumentType",
     ]
-    for tag in arg_type_tags:
-        for el in root.iter(_xtce(root, tag)):
-            name = el.get("name")
-            if name:
-                defined_types.add(name)
+    defined_types.update(_qualified_names(root, *arg_type_tags))
 
     broken: list[str] = []
-    for arg in root.iter(_xtce(root, "Argument")):
+    for scope, arg in _scoped(root, "Argument"):
         ref = arg.get("argumentTypeRef", "")
-        if ref and ref not in defined_types:
+        if ref and not _resolves(ref, scope, defined_types):
             broken.append(f"{arg.get('name')} → {ref}")
 
     if not broken:
