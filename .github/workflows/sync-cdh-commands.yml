@@ -52,8 +52,11 @@ jobs:
         working-directory: cdh
         run: ls -l build-artifacts/Linux/FlightComputer/dict/FlightComputerTopologyDictionary.json
 
+      - name: Install F Prime XTCE converter
+        run: pip install fprime-xtce==0.1.5
+
       - name: Convert Fprime dictionary to XTCE
-        run: python src/main/python/fprime_to_xtce.py --input cdh/build-artifacts/Linux/FlightComputer/dict/FlightComputerTopologyDictionary.json --output src/main/yamcs/commands/commands.xml --validate --verbose
+        run: fprime-to-xtce cdh/build-artifacts/Linux/FlightComputer/dict/FlightComputerTopologyDictionary.json -o src/main/yamcs/commands/commands.xml
 
       - name: Validate CDH commands
         run: python src/main/python/validate_xtce.py --input src/main/yamcs/commands/commands.xml --verbose
