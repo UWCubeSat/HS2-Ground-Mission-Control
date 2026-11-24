@@ -20,7 +20,7 @@ jobs:
       - name: Checkout CDH repository
         uses: actions/checkout@v4
         with: 
-          repository: UWCubeSat/HS2-CDH
+          repository: UWCubeSat/HS2-FSW
           path: cdh
           ssh-key: ${{ secrets.CDH }}
           ref: main
