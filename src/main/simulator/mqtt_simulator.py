@@ -20,6 +20,8 @@ from dataclasses import dataclass
 
 import paho.mqtt.client as mqtt
 
+from main.python.skyfield_valid import SkyfieldManager
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -139,9 +141,12 @@ def run_simulator(
     rate_hz: float,
     count: int | None,
     qos: int,
+    realtime: bool
 ) -> None:
     interval = 1.0 / rate_hz
 
+    skyfield_manager = SkyfieldManager()
+    calsphere_1 = skyfield_manager.satellites[0]
     # Initialize MQTT v2 Client
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="satellite-sim")
     client.connect(host, port, keepalive=60)
@@ -158,21 +163,29 @@ def run_simulator(
     )
 
     tick = 0
+    t0 = skyfield_manager.ts.now()
     try:
-        while count is None or tick < count:
-            packet = TelemetryPacket(
-                packet_id=tick,
-                temperature=generate_temperature(tick),
-                voltage=generate_voltage(tick),
-                status=generate_status(tick),
-                sequence=tick & 0x3FFF,
+        while (count is None or tick < count):
+            if skyfield_manager.up_now_fast(calsphere_1, t0):
+                packet = TelemetryPacket(
+                    packet_id=tick,
+                    temperature=generate_temperature(tick),
+                    voltage=generate_voltage(tick),
+                    status=generate_status(tick),
+                    sequence=tick & 0x3FFF,
+                )
+                try:
+                    publish_packet(client, topic, packet, qos=qos)
+                except mqtt.MQTTException as exc:
+                    logger.error("Failed to publish packet %d: %s", tick, exc)
+                tick += 1
+                
+            t0 = skyfield_manager.ts.now() if realtime else t0 + 5/1440
+            logger.debug(
+                "%s at %s",
+                skyfield_manager.up_now_fast(calsphere_1, t0),
+                t0.utc_strftime('%H:%M:%S')
             )
-            try:
-                publish_packet(client, topic, packet, qos=qos)
-            except mqtt.MQTTException as exc:
-                logger.error("Failed to publish packet %d: %s", tick, exc)
-
-            tick += 1
             time.sleep(interval)
 
     except KeyboardInterrupt:
@@ -208,6 +221,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--rate", type=float, default=1.0, help="Packets per second (default: 1.0)")
     parser.add_argument("--count", type=int, default=None, help="Total packets to send (default: unlimited)")
     parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
+    parser.add_argument("--realtime", action="store_true", help="Enable debug logging")
     args = parser.parse_args(argv)
 
     _configure_logging(args.verbose)
@@ -223,6 +237,7 @@ def main(argv: list[str] | None = None) -> int:
         rate_hz=args.rate,
         count=args.count,
         qos=args.qos,
+        realtime=args.realtime
     )
     return 0
 
