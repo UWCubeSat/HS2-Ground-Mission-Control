@@ -10,8 +10,10 @@ import time
 from skyfield.api import EarthSatellite, Loader, load, wgs84
 from skyfield.timelib import Time, Timescale
 
+# A TLE file was the position of a satellite when it sent it allowing position to be predicted (SGP4) in any time.
 TLE_URL = 'https://celestrak.org/NORAD/elements/gp.php?CATNR=900&FORMAT=tle' # redownload to get up-to-date TLE
-DATA_DIR = './skyfield-data'
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(CURRENT_DIR, 'skyfield-data')
 DATA_FILE = 'gp.php'
 
 DEFAULT_ELEVATION_THRESHOLD = 10.0
@@ -31,6 +33,7 @@ SECOND = 1/SECONDS_IN_A_DAY  # 1/86400
 
 QUERY = 5*MINUTE
 
+# ===HELPER METHODS - NOT USED ==============================================
 def find_all_valid_sat(locations: list, satellites: list, total_needed: int = 10) -> list:
     """Returns a list of satellite names that visit all locations within 2 days."""
     ts = load.timescale()
@@ -97,33 +100,42 @@ def up_now(satellite: EarthSatellite, locations: list, ts: Timescale,  t0: Time 
                     return True
             i += 1
     return False
+# ===========================================================================
 
-def up_now_fast(satilette: EarthSatellite, locations: list, ts: Timescale, t0: Time = None) -> bool:
-    """Same behavior as up_now() but pure math."""
-    if t0 is None:
-        t0 = ts.now()
+class SkyfieldManager:
+    def __init__(self, TLE_URL = TLE_URL, LOCATIONS = LOCATIONS, DEFAULT_ELEVATION_THRESHOLD = DEFAULT_ELEVATION_THRESHOLD):
+        self.ts = load.timescale()
+        self.satellites = self.get_satellites(TLE_URL)
+        self.locations = LOCATIONS
+        self.DEFAULT_ELEVATION_THRESHOLD = DEFAULT_ELEVATION_THRESHOLD
+    
+    def get_satellites(self, TLE_URL):
+        load = Loader(DATA_DIR)
+        if os.path.exists(f"{DATA_DIR}/{DATA_FILE}"):
+            return load.tle_file(DATA_FILE)
+        return load.tle_file(TLE_URL)
 
-    for _, site in locations:
-        difference = satilette - site
-        topocentric = difference.at(t0)
-        alt, _, _ = topocentric.altaz()
-        if alt.degrees >= DEFAULT_ELEVATION_THRESHOLD:
-            return True
-    return False
+    def up_now_fast(self, satellite: EarthSatellite, t0: Time = None) -> bool:
+        """Same behavior as up_now() but pure math."""
+        if t0 is None:
+            t0 = self.ts.now()
+
+        for _, site in self.locations:
+            difference = satellite - site
+            topocentric = difference.at(t0)
+            alt, _, _ = topocentric.altaz()
+            if alt.degrees >= self.DEFAULT_ELEVATION_THRESHOLD:
+                return True
+        return False
 
 def main():
-    load = Loader(DATA_DIR)
-    if os.path.exists(f"{DATA_DIR}/{DATA_FILE}"):
-        satellites = load.tle_file(DATA_FILE)
-    else:
-        satellites = load.tle_file(TLE_URL)
-    
-    calsphere_1 = satellites[0]
-    ts = load.timescale()
+    """Example usage"""
+    skyfield_manager = SkyfieldManager()
+    calsphere_1 = skyfield_manager.satellites[0]
 
-    t0 = ts.now()
+    t0 = skyfield_manager.ts.now()
     while True:
-        print(up_now_fast(calsphere_1, LOCATIONS, ts, t0), t0.utc_strftime('%H:%M:%S'))
+        print(skyfield_manager.up_now_fast(calsphere_1, t0), t0.utc_strftime('%H:%M:%S'))
         t0 += QUERY
         time.sleep(0.2)
 
