@@ -14,12 +14,19 @@ services:
       name: realtime
       type: realtime
   - class: org.yamcs.archive.CommandHistoryRecorder
+  - class: org.yamcs.plists.ParameterListService
+  - class: org.yamcs.timeline.TimelineService
   - class: org.yamcs.parameterarchive.ParameterArchive
     args:
       realtimeFiller:
+        enabled: false
+      backFiller:
         enabled: true
-  - class: org.yamcs.plists.ParameterListService
-  - class: org.yamcs.timeline.TimelineService
+        warmupTime: 60
+        streamUpdateFillPolicy:
+          - dataAge: -1
+            fillFrequency: 600
+            quietThreshold: 60
 
 dataLinks:
   # - name: udp-in
